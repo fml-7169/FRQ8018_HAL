@@ -19,7 +19,7 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-
+#include "co_printf.h"
 #define LOG_TAG "HAL"
 /**
  * Load the file defined by the variant and if successful
