@@ -31,9 +31,13 @@ static int load(const char *id,
         const struct hw_module_t **pHmi)
 {
     int status=-1;
-    if (strcmp(id, hal_module_info_light.id) != 0) {
-        co_printf("load: id=%s != hmi->id=%s", id, hal_module_info_light.id);
+    if (strcmp(id, hal_module_info_light.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s", id, hal_module_info_light.id);
         *pHmi = &hal_module_info_light;
+        status=0;
+    }else if (strcmp(id, hal_module_info_key.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s", id, hal_module_info_key.id);
+        *pHmi = &hal_module_info_key;
         status=0;
     }
     return status;

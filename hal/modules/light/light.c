@@ -312,8 +312,8 @@ const struct hw_module_t hal_module_info_light = {
     .version_major = 1,
     .version_minor = 0,
     .id = LIGHTS_HARDWARE_MODULE_ID,  // 模块id
-    .name = "atxx lights Module",     // 名称
-    .author = "xxx",
+    .name = "Govee lights Module",     // 名称
+    .author = "Govee",
     .methods = &lights_module_methods,// 方法
 };
 
