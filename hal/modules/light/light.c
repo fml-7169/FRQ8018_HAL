@@ -23,6 +23,8 @@
 #include <limits.h>
 #include "lights.h"
 #include "os_mem.h"
+#include "hal_config.h"
+
 #define LOGD(...)
 #define LOGE(...)
 #define LOGI(...)
