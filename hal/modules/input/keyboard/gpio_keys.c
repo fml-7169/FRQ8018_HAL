@@ -2,11 +2,12 @@
 #include "hardware.h"
 #include "gpio_keys.h"
 #include "os_timer.h"
-#include "driver_pmu_regs.h"
-#include "driver_pmu.h"
 #include "co_printf.h"
 #include "os_mem.h"
 #include "os_msg_q.h"
+#include "hal_config.h"
+#include "gpio.h"
+#include "driver_pmu.h"
 
 #define DEV_ERR(format,...) do { \
 co_printf("[KEYS] error:"); \
@@ -26,7 +27,7 @@ static os_timer_t anti_shake_timer;
 
 enum keys_button_type_t {
     KEYS_BUTTON_PRESSED,        
-    BUTTON_RELEASED,
+    KEYS_BUTTON_RELEASED,
     KEYS_BUTTON_SHORT_RELEASED,  //press to release,short end
     KEYS_BUTTON_LONG_PRESSED,
     KEYS_BUTTON_LONG_RELEASED,
@@ -59,23 +60,6 @@ static void*  keys_get_drvdata(void ){
         do {                            \
             (_work)->func = (_func);            \
         } while (0)
-
-#define DEBOUNCE_DEFAULT 3
-#define SHORT_DEFAULT_VALUE 1000
-
-struct keys_config_stuct{
-    unsigned int gpio;
-    int debounce_interval; //ms
-    unsigned int short_timeout_ms; //ms
-};
-struct keys_config_stuct keys_gpio_map[]={
-    {GPIO_PC5,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE},
-    {GPIO_PD6,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE},
-//    {GPIO_PD4,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE},
-//    {GPIO_PD3,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE}
-}; 
-
-
 
 /**
  * gpio_keys_disable_button() - disables given GPIO button
@@ -171,7 +155,7 @@ static void gpio_keys_state(void *_pdata,uint32_t gpio_value){
                         //report to service
                     }
                 }break;
-            case BUTTON_RELEASED:{
+            case KEYS_BUTTON_RELEASED:{
                 if((gpio_value_pin ^ data->button[i].gpio)){ //press
                     data->button[i].type=KEYS_BUTTON_PRESSED;                    
                     gpio_keys_report_event(&data->button[i]);
@@ -243,24 +227,20 @@ void button_toggle_detected(uint32_t curr_button)
         for(i=0;i<dev->n_buttons;i++){
             key_dev_mask|=dev->button[i].gpio;
         }        
-//        DEV_DEBUG("key_dev_mask is 0x%x\r\n",key_dev_mask);
-        dev->anti_shake_mask = key_dev_mask & curr_button;        
-//        DEV_DEBUG("anti_shake_mask is 0x%x,debounce_interval is %d\r\n",\
-//                    dev->anti_shake_mask,dev->button[0].debounce_interval);
+        dev->anti_shake_mask = key_dev_mask & curr_button;
         os_timer_start(&anti_shake_timer, dev->button[0].debounce_interval, false);
     }
 }
 
-static int  gpio_keys_setup_key(struct key_device_t *dev)
+static int  gpio_keys_setup_key(struct key_device_t *dev,void *pin_map,int pin_len)
 {
 	int irq, error=KEYS_SET_FAIL;    
     int i=0;
     if(dev == NULL){
         return error;
     }    
-    //	setup_timer(&bdata->timer, gpio_keys_long_timer, (unsigned long)bdata);    
-//    PREPARE_WORK(&dev->work, gpio_keys_work_func);
-    dev->n_buttons=sizeof(keys_gpio_map)/sizeof(struct keys_config_stuct);
+    struct keys_config_stuct *keys_config_pin=(struct keys_config_stuct *)pin_map;
+    dev->n_buttons=pin_len/sizeof(struct keys_config_stuct);
     //malloc and init button from gpio's map
     dev->button=os_malloc(dev->n_buttons*sizeof(struct gpio_keys_button));
     dev->timer_list=(os_timer_t*)os_malloc(dev->n_buttons*sizeof(os_timer_t));    
@@ -268,12 +248,13 @@ static int  gpio_keys_setup_key(struct key_device_t *dev)
     for(i=0;i<dev->n_buttons;i++){
         os_timer_init(&timer_handle[i], gpio_keys_long_timer, &dev->button[i]);
         //for gpio's config
-        dev->button[i].debounce_interval=keys_gpio_map[i].debounce_interval;   //3ms
-        dev->button[i].type=BUTTON_RELEASED;
-        dev->button[i].gpio=keys_gpio_map[i].gpio;
-        dev->button[i].short_timeout=keys_gpio_map[i].short_timeout_ms;
+        dev->button[i].debounce_interval=keys_config_pin[i].debounce_interval;   //3ms
+        dev->button[i].type=KEYS_BUTTON_RELEASED;
+        dev->button[i].gpio=keys_config_pin[i].gpio;
+        dev->button[i].short_timeout=keys_config_pin[i].short_timeout_ms;
         dev->anti_shake_mask |=dev->button[i].gpio;
-    }    
+    }
+    gpio_pmu_wakeupsrc(dev->anti_shake_mask);
     DEV_DEBUG("dev setup address is 0x%x\r\n",dev);
     os_timer_init(&anti_shake_timer, gpio_keys_shake_timer, dev);
 	error= KEYS_SUC;
@@ -298,6 +279,16 @@ static int gpio_keys_close(struct key_device_t *dev)
      
      return 0;
 }
+void gpio_keys_pin_config(void *pin_map,int pin_map_len,void *device)
+{
+    if(pin_map == NULL || pin_map_len<=0 || device == NULL){
+        DEV_ERR("input is error\r\n");
+        return;
+    }
+    struct key_device_t*dev=(struct key_device_t*)device;
+    gpio_keys_setup_key(dev,pin_map,pin_map_len);
+    return;
+}
 
 static int gpio_keys_open(const struct hw_module_t* module, char const* name,
         struct hw_device_t** device)
@@ -305,12 +296,11 @@ static int gpio_keys_open(const struct hw_module_t* module, char const* name,
     //malloc dev
 	key_device_t *dev = os_malloc(sizeof(key_device_t));
     memset(dev, 0, sizeof(*dev));
-    DEV_DEBUG("dev address is 0x%x\r\n",dev);
-    gpio_keys_setup_key(dev);
     dev->common.tag = HARDWARE_DEVICE_TAG;
     dev->common.version = 0;
     dev->common.module = (struct hw_module_t*)module;
     dev->common.close = (int (*)(struct hw_device_t*))gpio_keys_close;
+    dev->key_pin_config=gpio_keys_pin_config;
     dev->key_report_init=gpio_keys_report_init;
     keys_set_drvdata(dev);
     *device = (struct hw_device_t*)dev;
