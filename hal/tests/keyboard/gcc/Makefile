@@ -31,6 +31,7 @@ SRC_FILES += \
 
 SRC_FILES += \
 	   $(HAL_DIR)/hardware.c \
+	   $(HAL_DIR)/gpio.c \
 	   $(HAL_DIR)/modules/input/keyboard/gpio_keys.c \
 	   $(HAL_DIR)/modules/light/light.c
 # Include folders common to all targets
