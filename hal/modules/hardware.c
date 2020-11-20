@@ -32,14 +32,19 @@ static int load(const char *id,
 {
     int status=-1;
     if (strcmp(id, hal_module_info_light.id) == 0) {
-        co_printf("load: id=%s == hmi->id=%s", id, hal_module_info_light.id);
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_light.id);
         *pHmi = &hal_module_info_light;
         status=0;
     }
+    #ifdef HAL_KEYS_CONFIG_
     if (strcmp(id, hal_module_info_key.id) == 0) {
-        co_printf("load: id=%s == hmi->id=%s", id, hal_module_info_key.id);
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_key.id);
         *pHmi = &hal_module_info_key;
         status=0;
+    }
+    #endif
+    if(status !=0){
+        co_printf("load: id=%s fail\r\n", id);
     }
     return status;
 }

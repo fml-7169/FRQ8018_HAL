@@ -22,6 +22,8 @@
 #include "driver_pmu_regs.h"
 #include "driver_pmu.h"
 #include "user_task.h"
+#include "hal_config.h"
+
 /*
  * MACROS (ºê¶¨Òå)
  */
@@ -216,6 +218,14 @@ static void sp_start_adv(void)
  *
  * @return  None.
  */
+#define KEYS_DEBOUNCE_DEFAULT 3          //ms
+#define KEYS_SHORT_DEFAULT 1000    //ms
+    struct keys_config_stuct keys_gpio_map[]={
+        {GPIO_PC5,KEYS_DEBOUNCE_DEFAULT,KEYS_SHORT_DEFAULT},
+        {GPIO_PD6,KEYS_DEBOUNCE_DEFAULT,KEYS_SHORT_DEFAULT},
+    //    {GPIO_PD4,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE},
+    //    {GPIO_PD3,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE}
+    };
 
 static key_device_t* get_device(hw_module_t* module, char const* name)
 {
@@ -265,6 +275,7 @@ void simple_peripheral_init(void)
     err = hw_get_module(KEYS_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
     co_printf("start get modules name is %s,\r\n",module->name);
     key_device_t* pkey_dev= get_device(module, NULL);
+    pkey_dev->key_pin_config((void *)keys_gpio_map,sizeof(keys_gpio_map),(void *)pkey_dev);
     pkey_dev->key_report_init(user_report_keys);
     // Adding services to database
     sp_gatt_add_service();  

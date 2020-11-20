@@ -28,12 +28,6 @@ SRC_FILES += \
               $(SDK_ROOT)/components/modules/platform/source/app_boot_vectors.c \
               $(SDK_ROOT)/components/modules/patch/patch.c
 
-
-SRC_FILES += \
-	   $(HAL_DIR)/hardware.c \
-	   $(HAL_DIR)/gpio.c \
-	   $(HAL_DIR)/modules/input/keyboard/gpio_keys.c \
-	   $(HAL_DIR)/modules/light/light.c
 # Include folders common to all targets
 INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/include \
@@ -54,6 +48,7 @@ INC_FOLDERS += \
 	   $(HAL_DIR)/modules/input/keyboard
 	   
 # Libraries common to all targets
+LIB_FILES += -lhal
 LIB_FILES += -lfr8010h_stack
 
 # Optimization flags
@@ -67,6 +62,7 @@ CFLAGS += -mthumb
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fmessage-length=0 -fsigned-char
 CFLAGS += -std=gnu11
+CFLAGS += -DHAL_KEYS_CONFIG_
 
 # Assembler flags common to all targets
 ASMFLAGS += -g3
@@ -78,6 +74,7 @@ LDFLAGS += $(OPT)
 LDFLAGS += -mthumb
 LDFLAGS += -mcpu=cortex-m3
 LDFLAGS +=  -T$(LINKER_SCRIPT) -L$(SDK_ROOT)/components/ble/library
+LDFLAGS +=  -L$(HAL_DIR)/libs
 LDFLAGS += $(SDK_ROOT)/components/ble/library/syscall_gcc.txt
 # let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
