@@ -30,12 +30,15 @@ static int load(const char *id,
         const char *path,
         const struct hw_module_t **pHmi)
 {
-    int status=-1;
+    int status=-1;    
+    #ifdef HAL_KEYS_CONFIG_
     if (strcmp(id, hal_module_info_light.id) == 0) {
         co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_light.id);
         *pHmi = &hal_module_info_light;
         status=0;
     }
+    #endif
+    
     #ifdef HAL_KEYS_CONFIG_
     if (strcmp(id, hal_module_info_key.id) == 0) {
         co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_key.id);

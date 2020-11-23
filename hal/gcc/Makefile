@@ -1,17 +1,32 @@
+TEMPLATE_PATH := ./
+include $(TEMPLATE_PATH)/Makefile.param
 PROJECT_NAME     := hal_libs
 TARGETS          := libhal
 OUTPUT_DIRECTORY := build
-
 SDK_ROOT := ../../FR801xH-SDK
 
 LINKER_SCRIPT  := ldscript.ld
 HAL_DIR:=../../hal
 HAL_LIBS=$(HAL_DIR)/libs
-SRC_FILES += \
+
+SRC_FILES_COMM +=\
 	   $(HAL_DIR)/modules/hardware.c \
-	   $(HAL_DIR)/modules/gpio.c \
-	   $(HAL_DIR)/modules/input/keyboard/gpio_keys.c \
-	   $(HAL_DIR)/modules/light/light.c
+	   $(HAL_DIR)/modules/gpio.c 
+
+
+ifneq ($(origin MODULES_KEYS), undefined)
+	SRC_FILES_KEYS +=\
+					 $(HAL_DIR)/modules/input/keyboard/gpio_keys.c
+endif
+
+ifneq ($(origin MODULES_LIGHTS), undefined)
+	SRC_FILES_LIGHTS +=\
+					 $(HAL_DIR)/modules/light/light.c
+endif
+
+SRC_FILES += $(SRC_FILES_COMM) \
+			 $(SRC_FILES_KEYS) \
+			 $(SRC_FILES_LIGHTS)
 # Include folders common to all targets
 INC_FOLDERS += \
   $(SDK_ROOT)/components/driver/include \
@@ -41,7 +56,13 @@ CFLAGS += -mthumb
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -fmessage-length=0 -fsigned-char
 CFLAGS += -std=gnu11
-CFLAGS += -DHAL_KEYS_CONFIG_
+ifneq ($(origin MODULES_KEYS), undefined)
+	CFLAGS += -DHAL_KEYS_CONFIG_
+endif
+
+ifneq ($(origin MODULES_LIGHTS), undefined)
+	CFLAGS += -DHAL_LIGHTS_CONFIG_
+endif
 
 # Assembler flags common to all targets
 ASMFLAGS += -g3
@@ -57,7 +78,6 @@ LDFLAGS += $(SDK_ROOT)/components/ble/library/syscall_gcc.txt
 # let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
 
-TEMPLATE_PATH := ./
 
 include $(TEMPLATE_PATH)/Makefile.common
 
