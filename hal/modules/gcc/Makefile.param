@@ -1,0 +1,4 @@
+# support keyboard light and adc
+# modules_name must be is the project's dir .example keyboard=modules/input/keyboard
+MODULES_NAME +=keyboard
+MODULES_NAME +=light

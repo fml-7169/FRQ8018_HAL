@@ -1,32 +1,25 @@
 TEMPLATE_PATH := ./
 include $(TEMPLATE_PATH)/Makefile.param
-PROJECT_NAME     := hal_libs
-TARGETS          := libhal
-OUTPUT_DIRECTORY := build
-SDK_ROOT := ../../FR801xH-SDK
 
+PROJECT_NAME     := hal_libs
+TARGETS          :=$(MODULES_NAME)
+OUTPUT_DIRECTORY := build
+SDK_ROOT := ../../../FR801xH-SDK
 LINKER_SCRIPT  := ldscript.ld
-HAL_DIR:=../../hal
-HAL_LIBS=$(HAL_DIR)/libs
+MODULES_DIR:=../../modules
+INSTALL_LIBS=$(MODULES_DIR)/../libs
+INSTALL_INC=$(MODULES_DIR)/../include
+
+
 
 SRC_FILES_COMM +=\
-	   $(HAL_DIR)/modules/hardware.c \
-	   $(HAL_DIR)/modules/gpio.c 
+	   $(MODULES_DIR)/common/hardware.c \
+	   $(MODULES_DIR)/common/gpio.c 
+INC_COMM += \
+	   $(MODULES_DIR)/common
 
 
-ifneq ($(origin MODULES_KEYS), undefined)
-	SRC_FILES_KEYS +=\
-					 $(HAL_DIR)/modules/input/keyboard/gpio_keys.c
-endif
-
-ifneq ($(origin MODULES_LIGHTS), undefined)
-	SRC_FILES_LIGHTS +=\
-					 $(HAL_DIR)/modules/light/light.c
-endif
-
-SRC_FILES += $(SRC_FILES_COMM) \
-			 $(SRC_FILES_KEYS) \
-			 $(SRC_FILES_LIGHTS)
+SRC_FILES += $(SRC_FILES_COMM)
 # Include folders common to all targets
 INC_FOLDERS += \
   $(SDK_ROOT)/components/driver/include \
@@ -35,13 +28,9 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/modules/platform/include \
   $(SDK_ROOT)/components/modules/common/include \
   $(SDK_ROOT)/components/modules/lowpow/include \
+  $(INC_COMM) \
   $(SDK_ROOT)/components/modules/button 
 
-INC_FOLDERS += \
-	   $(HAL_DIR)/include \
-	   $(HAL_DIR)/modules/light \
-	   $(HAL_DIR)/modules/input/keyboard
-	   
 # Libraries common to all targets
 LIB_FILES += -lfr8010h_stack
 
@@ -80,5 +69,9 @@ LDFLAGS += -Wl,--gc-sections
 
 
 include $(TEMPLATE_PATH)/Makefile.common
-
+#TEST_DIR=light keyboard
+SRC_DIR :=$(foreach dir_name, $(TARGETS), $(shell find ../ -name $(dir_name) -type d))
+#SRC_DIR_IFILES :=$(foreach find_name, $(SRC_DIR), $(wildcard $(find_name)/*.h))
+INSTALL_INC_FILES :=$(wildcard $(INC_COMM)/*.h) \
+	$(foreach find_name, $(SRC_DIR), $(wildcard $(find_name)/*.h))
 $(foreach target, $(TARGETS), $(call define_target, $(target)))

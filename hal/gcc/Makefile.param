@@ -1,3 +1,0 @@
-# support keyboard light and adc
-MODULES_KEYS := keyboard
-MODULES_LIGHTS :=lights

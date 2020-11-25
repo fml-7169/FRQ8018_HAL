@@ -94,7 +94,7 @@ void gpio_pmu_wakeupsrc(unsigned int        gpios){
             | GPIO_NAME(PD,5)| GPIO_NAME(PD,6)| GPIO_NAME(PD,7);    
     port_bit=gp_port &gpios;
     if(port_bit ){
-        pmu_set_pin_pull(GPIO_PORT_B,port_bit>>(GPOUP_COUNT*3), true);
+        pmu_set_pin_pull(GPIO_PORT_D,port_bit>>(GPOUP_COUNT*3), true);
     }
     pmu_port_wakeup_func_set(gpios);
 }
