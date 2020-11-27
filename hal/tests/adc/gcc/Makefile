@@ -1,5 +1,5 @@
 PROJECT_NAME     := fr8016h_ble_simple_peripheral
-TARGETS          := hal_keyboard
+TARGETS          := hal_adc
 OUTPUT_DIRECTORY := build
 
 SDK_ROOT := ../../../../FR801xH-SDK
@@ -17,6 +17,7 @@ SRC_FILES += \
               $(SDK_ROOT)/components/driver/driver_pmu.c \
               $(SDK_ROOT)/components/driver/driver_keyscan.c \
               $(SDK_ROOT)/components/driver/driver_pmu_qdec.c \
+              $(SDK_ROOT)/components/driver/driver_adc.c \
               $(SDK_ROOT)/components/driver/driver_rtc.c \
               $(SDK_ROOT)/components/driver/driver_uart.c \
               $(SDK_ROOT)/components/driver/driver_wdt.c \
@@ -28,7 +29,7 @@ SRC_FILES += \
               $(SDK_ROOT)/components/modules/platform/source/app_boot_vectors.c \
               $(SDK_ROOT)/components/modules/patch/patch.c
 SRC_FILES += \
-			 $(HAL_DIR)/modules/input/keyboard/gpio_keys.c \
+			 $(HAL_DIR)/modules/input/adc/hal_adc.c \
 			 $(HAL_DIR)/modules/common/gpio.c \
 
 # Include folders common to all targets

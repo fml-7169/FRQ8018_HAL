@@ -30,7 +30,7 @@ struct keys_config_stuct{
 };
 
 struct adc_config_stuct{
-    unsigned int gpio;
+    unsigned int adc_index;  //from 0~3
     int sample;
     unsigned int channel;
 };

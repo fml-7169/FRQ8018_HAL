@@ -18,11 +18,13 @@
 
 #include "sys_utils.h"
 #include "flash_usage_config.h"
-#include "gpio_keys.h"
+#include "hal_adc.h"
 #include "driver_pmu_regs.h"
 #include "driver_pmu.h"
+#include "driver_adc.h"
 #include "user_task.h"
 #include "hal_config.h"
+#include "hal_adc.h"
 
 /*
  * MACROS (ºê¶¨Òå)
@@ -218,22 +220,20 @@ static void sp_start_adv(void)
  *
  * @return  None.
  */
-#define KEYS_DEBOUNCE_DEFAULT 3          //ms
-#define KEYS_SHORT_DEFAULT 1000    //ms
-    struct keys_config_stuct keys_gpio_map[]={
-        {GPIO_PC5,KEYS_DEBOUNCE_DEFAULT,KEYS_SHORT_DEFAULT},
-        {GPIO_PD6,KEYS_DEBOUNCE_DEFAULT,KEYS_SHORT_DEFAULT},
+    struct adc_config_stuct adc_map[]={
+        {0,ADC_SAMPLE_CLK_64K_DIV13,1},
+        {1,ADC_SAMPLE_CLK_64K_DIV13,2},
     //    {GPIO_PD4,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE},
     //    {GPIO_PD3,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE}
     };
-extern const struct hw_module_t hal_module_info_key;
-static key_device_t* get_device(hw_module_t* module, char const* name)
+extern const struct hw_module_t hal_module_info_adc;
+static adc_device_t* get_device(hw_module_t* module, char const* name)
 {
     int err;
     hw_device_t* device;
     err = module->methods->open(module, name, &device);
     if (err == 0) {
-        return (key_device_t*)device;
+        return (adc_device_t*)device;
     } else {
         return NULL;
     }
@@ -265,14 +265,15 @@ void simple_peripheral_init(void)
     mac_addr_t addr;
     gap_address_get(&addr);
     co_printf("Local BDADDR: 0x%2X%2X%2X%2X%2X%2X\r\n", addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3], addr.addr[4], addr.addr[5]);
-
-    pmu_set_pin_pull(GPIO_PORT_D, (1<<GPIO_BIT_6), true);
-    pmu_set_pin_pull(GPIO_PORT_C, (1<<GPIO_BIT_5), true);
-    pmu_port_wakeup_func_set(GPIO_PD6|GPIO_PC5);
     int err;
-    key_device_t* pkey_dev= get_device(&hal_module_info_key, NULL);
-    pkey_dev->key_pin_config((void *)keys_gpio_map,sizeof(keys_gpio_map),(void *)pkey_dev);
-    pkey_dev->key_report_init(user_report_keys);
+    adc_device_t* padc_dev= get_device(&hal_module_info_adc, NULL);
+    padc_dev->cli.pin_config(adc_map,sizeof(adc_map),padc_dev);
+    co_delay_100us(10000);
+    padc_dev->cli.read(&padc_dev->cli,1);
+    co_printf("client value is %d\r\n",padc_dev->cli.result);        
+    co_delay_100us(10000);
+    padc_dev->cli.read(&padc_dev->cli,2);    
+    co_printf("client value is %d\r\n",padc_dev->cli.result);    
     // Adding services to database
     sp_gatt_add_service();  
 }

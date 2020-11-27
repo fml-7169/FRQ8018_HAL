@@ -222,7 +222,7 @@ int hw_get_module(const char *id, const struct hw_module_t **module);
 
 extern const struct hw_module_t hal_module_info_light;
 extern const struct hw_module_t hal_module_info_key;
-
+extern const struct hw_module_t hal_module_info_adc;
 __END_DECLS
 
 #endif  /* ANDROID_INCLUDE_HARDWARE_HARDWARE_H */
