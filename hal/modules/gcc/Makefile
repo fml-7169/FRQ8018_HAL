@@ -18,6 +18,20 @@ SRC_FILES_COMM +=\
 INC_COMM += \
 	   $(MODULES_DIR)/common
 
+#driver
+SRC_FILES += \
+              $(SDK_ROOT)/components/driver/driver_iic.c \
+              $(SDK_ROOT)/components/driver/driver_pmu.c \
+              $(SDK_ROOT)/components/driver/driver_keyscan.c \
+              $(SDK_ROOT)/components/driver/driver_pmu_qdec.c \
+              $(SDK_ROOT)/components/driver/driver_rtc.c \
+              $(SDK_ROOT)/components/driver/driver_uart.c \
+              $(SDK_ROOT)/components/driver/driver_wdt.c \
+              $(SDK_ROOT)/components/driver/driver_i2s.c \
+              $(SDK_ROOT)/components/driver/driver_exti.c \
+              $(SDK_ROOT)/components/driver/driver_timer.c \
+              $(SDK_ROOT)/components/driver/driver_adc.c \
+			  $(SDK_ROOT)/components/driver/driver_efuse.c 
 
 SRC_FILES += $(SRC_FILES_COMM)
 # Include folders common to all targets
