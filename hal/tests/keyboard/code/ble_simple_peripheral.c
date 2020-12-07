@@ -218,14 +218,6 @@ static void sp_start_adv(void)
  *
  * @return  None.
  */
-#define KEYS_DEBOUNCE_DEFAULT 3          //ms
-#define KEYS_SHORT_DEFAULT 1000    //ms
-    struct keys_config_stuct keys_gpio_map[]={
-        {GPIO_PC5,KEYS_DEBOUNCE_DEFAULT,KEYS_SHORT_DEFAULT},
-        {GPIO_PD6,KEYS_DEBOUNCE_DEFAULT,KEYS_SHORT_DEFAULT},
-    //    {GPIO_PD4,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE},
-    //    {GPIO_PD3,DEBOUNCE_DEFAULT,SHORT_DEFAULT_VALUE}
-    };
 extern const struct hw_module_t hal_module_info_key;
 static key_device_t* get_device(hw_module_t* module, char const* name)
 {
@@ -271,7 +263,6 @@ void simple_peripheral_init(void)
     pmu_port_wakeup_func_set(GPIO_PD6|GPIO_PC5);
     int err;
     key_device_t* pkey_dev= get_device(&hal_module_info_key, NULL);
-    pkey_dev->key_pin_config((void *)keys_gpio_map,sizeof(keys_gpio_map),(void *)pkey_dev);
     pkey_dev->key_report_init(user_report_keys);
     // Adding services to database
     sp_gatt_add_service();  
