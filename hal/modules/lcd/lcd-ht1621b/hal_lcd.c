@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "hardware.h"
-#include "gpio_keys.h"
 #include "os_timer.h"
 #include "co_printf.h"
 #include "os_mem.h"
