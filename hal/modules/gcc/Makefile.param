@@ -3,3 +3,4 @@
 MODULES_NAME +=keyboard
 MODULES_NAME +=light
 MODULES_NAME +=adc
+MODULES_NAME +=lcd-ht1621b
