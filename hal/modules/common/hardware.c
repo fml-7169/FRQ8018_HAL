@@ -55,6 +55,11 @@ static int load(const char *id,
         *pHmi = &hal_module_info_lcd;
         status=0;
     }
+    if (strcmp(id, hal_module_info_bz.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_bz.id);
+        *pHmi = &hal_module_info_bz;
+        status=0;
+    }
     //#endif
     if(status !=0){
         co_printf("load: id=%s fail\r\n", id);

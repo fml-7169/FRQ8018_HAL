@@ -31,6 +31,7 @@ SRC_FILES += \
               $(SDK_ROOT)/components/driver/driver_exti.c \
               $(SDK_ROOT)/components/driver/driver_timer.c \
               $(SDK_ROOT)/components/driver/driver_adc.c \
+              $(SDK_ROOT)/components/driver/driver_pwm.c \
 			  $(SDK_ROOT)/components/driver/driver_efuse.c 
 
 SRC_FILES += $(SRC_FILES_COMM)

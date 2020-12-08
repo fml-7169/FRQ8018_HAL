@@ -224,6 +224,7 @@ extern const struct hw_module_t hal_module_info_light;
 extern const struct hw_module_t hal_module_info_key;
 extern const struct hw_module_t hal_module_info_adc;
 extern const struct hw_module_t hal_module_info_lcd;
+extern const struct hw_module_t hal_module_info_bz;
 __END_DECLS
 
 #endif  /* ANDROID_INCLUDE_HARDWARE_HARDWARE_H */
