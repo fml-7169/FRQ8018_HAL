@@ -116,6 +116,12 @@ typedef struct light_state_t {
      */
     int brightnessMode;
 }light_state_t;
+#define NAME_MAX_LEN    (16)
+typedef struct _light_portPin_map {
+  char name[NAME_MAX_LEN];
+  uint32_t GPIOx;
+  uint32_t GPIO_Pin_x;
+} light_portPin_map;
 
 typedef struct light_device_t {
     struct hw_device_t common;
@@ -127,7 +133,11 @@ typedef struct light_device_t {
      */
     int (*set_light)(struct light_device_t* dev,
             struct light_state_t const* state);
+    int (*init_light)(struct light_device_t* dev,
+        light_portPin_map *pportPin_map,int map_count);
+    light_portPin_map *plight_portPin_map;
 }light_device_t;
+
 
 
 #endif  // ANDROID_LIGHTS_INTERFACE_H
