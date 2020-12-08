@@ -40,11 +40,10 @@ static lcd_TypeDef* __lcd = NULL;
 *   h g f e d c b a
 *   1 1 1 1 1 1 1 1 (all on)
       1 1 1 0 1 1 1
-
 *   
 *
 */
-#define NEGATIVE 0b10000000 //'-'
+#define NEGATIVE 0b01000000 //'-'
  const unsigned char char_map[] = {
    0b00111111, //0
    0b00000110, //1
@@ -372,6 +371,10 @@ static void lcd_putchar_cached(int index,unsigned char c) {
     DEV_DEBUG("index[%d],char is %c\r\n",index,c);
     switch(c)
     { // map the digits to the seg bits
+          case 0:{
+              DEV_DEBUG("index[%d],clear %d\r\n",index,c);              
+              lcd_write_ram(index,0);
+          }break;
           case '0':
               lcd_write_ram(index,char_map[0]);
               break;
@@ -452,7 +455,7 @@ void lcd_put_tem(int pos,unsigned char* str,int str_len,unsigned char unit) {
     assert_param(str != NULL);  
     assert_param(str_len <= NUM_DIGITS_MAX );
 
-    unsigned char sh_str[NUM_DIGITS_MAX]={'0'};  //make up string
+    unsigned char sh_str[NUM_DIGITS_MAX]={0};  //make up string
     memcpy(&sh_str[NUM_DIGITS_MAX-str_len],str,str_len);
     //string must  3 bytes
     for(i=0; i<NUM_DIGITS_MAX; i++) {

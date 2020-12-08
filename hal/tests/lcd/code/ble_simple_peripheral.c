@@ -220,7 +220,7 @@ lcd_TypeDef* plcd_TypeDef=NULL;
 os_timer_t lcd_timer;
 lcd_device_t* plcd_dev=NULL;
 
-extern struct hw_module_t hal_module_info_lcd;
+//extern struct hw_module_t hal_module_info_lcd;
 static lcd_device_t* get_device(hw_module_t* module, char const* name)
 {
     int err;
@@ -235,13 +235,13 @@ static lcd_device_t* get_device(hw_module_t* module, char const* name)
 
 static void lcd_timer_func(void *param){        
     static int scount=0;
-    int svalue=123+scount;
+    int svalue=12+scount;
     char sstr[12]={0};
     if(scount == 0){
         co_printf("start show default struct for lcd\r\n");
         //lcd_default_context();
     }
-    co_sprintf(sstr,"%03d",svalue);
+    co_sprintf(sstr,"%d",svalue);
     plcd_dev->lcd_stem(0,sstr,strlen(sstr),0);
     plcd_dev->lcd_sbattery(svalue%100);    
     int i=0;
