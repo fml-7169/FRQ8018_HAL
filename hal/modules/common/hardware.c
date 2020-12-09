@@ -19,7 +19,7 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-
+#include "co_printf.h"
 #define LOG_TAG "HAL"
 /**
  * Load the file defined by the variant and if successful
@@ -30,11 +30,39 @@ static int load(const char *id,
         const char *path,
         const struct hw_module_t **pHmi)
 {
-    int status=-1;
-    if (strcmp(id, hal_module_info_light.id) != 0) {
-        co_printf("load: id=%s != hmi->id=%s", id, hal_module_info_light.id);
+    int status=-1;    
+    //#ifdef HAL_KEYS_CONFIG_
+    if (strcmp(id, hal_module_info_light.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_light.id);
         *pHmi = &hal_module_info_light;
         status=0;
+    }
+   // #endif
+    
+    //#ifdef HAL_KEYS_CONFIG_
+    if (strcmp(id, hal_module_info_key.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_key.id);
+        *pHmi = &hal_module_info_key;
+        status=0;
+    }
+    if (strcmp(id, hal_module_info_adc.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_adc.id);
+        *pHmi = &hal_module_info_adc;
+        status=0;
+    }
+    if (strcmp(id, hal_module_info_lcd.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_lcd.id);
+        *pHmi = &hal_module_info_lcd;
+        status=0;
+    }
+    if (strcmp(id, hal_module_info_bz.id) == 0) {
+        co_printf("load: id=%s == hmi->id=%s\r\n", id, hal_module_info_bz.id);
+        *pHmi = &hal_module_info_bz;
+        status=0;
+    }
+    //#endif
+    if(status !=0){
+        co_printf("load: id=%s fail\r\n", id);
     }
     return status;
 }
