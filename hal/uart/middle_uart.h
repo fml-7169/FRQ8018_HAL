@@ -27,8 +27,28 @@ typedef void (*uart_callback)(uint8* p_data, uint32 size);
 
 typedef struct
 {
+    int8 baud_rate;
     uart_callback uart_read;
 } uart_config_t;
+
+ uint32_t uart_baud_map[12] = {1200,2400,4800,9600,14400,19200,38400,57600,115200,230400,460800,921600};
+
+typedef enum
+{
+    BAUD_RATE_1200 = 0,
+    BAUD_RATE_2400,
+    BAUD_RATE_4800,
+    BAUD_RATE_9600,
+    BAUD_RATE_14400,
+    BAUD_RATE_19200,
+    BAUD_RATE_38400,
+    BAUD_RATE_57600,
+    BAUD_RATE_115200,
+    BAUD_RATE_230400,
+    BAUD_RATE_460800,
+    BAUD_RATE_921600,
+    BAUD_RATE_MAX
+} msg_source_e;
 
 
 int32 mid_uart_command_get(uint8* buffer);

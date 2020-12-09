@@ -61,7 +61,12 @@ int32 app_bridge_uart_send_data(uint8* p_data, uint32 size)
 
 void app_bridge_pwm_init(uint8 PWMindex, uint8 enableWork, uint16 PWMperiod, uint16 dutyCycle)
 {
-
+    system_set_port_mux(GPIO_PORT_A,GPIO_BIT_4,PORTA4_FUNC_PWM4);       //R
+    gpio_set_dir(GPIO_PORT_A,GPIO_BIT_4,true);
+    pwm_init(PWM_CHANNEL_4,20000,80);
+    //pwm_update
+    pwm_start(PWM_CHANNEL_4); 
+    pwm_update(PWM_CHANNEL_4,20000,99);     // R G B
 }
 
 void app_bridge_pwm_enable(uint8 PWMindex, uint8 enableWork)
@@ -81,9 +86,10 @@ void app_bridge_pwm_duty_cycle_set(uint8 PWMindex, uint16 dutyCycle)
 
 void app_bridge_system_reboot(void)
 {
-    wdt_init(WDT_ACT_RST_CHIP, 1);
-    wdt_start();
-    while(1);
+    //wdt_init(WDT_ACT_RST_CHIP, 1);
+    //wdt_start();
+    //while(1);
+    platform_reset_patch(0);
 }
 
 void app_bridge_flash_read_data(void* buffer, uint32 size, uint32 address)
