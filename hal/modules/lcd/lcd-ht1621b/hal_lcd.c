@@ -216,7 +216,7 @@ static void lcd_begin(lcd_TypeDef* lcd) {
 	ht1621_SendCmd(LCDON);
     ht1621b_disable();    
 }
-static void lcd_default_context(void){
+void lcd_default_context(void){
     assert_param(__lcd != NULL);
 
     //show NUM 1
@@ -363,6 +363,20 @@ void lcd_battery_power(const unsigned char electry)
 		lcd_set_seg(electry_icon[i]);
 	}    
     ht1621_Update();
+}
+
+//clear lcd's context
+void lcd_clear(void){
+    memset(__lcd_ram,0x00,sizeof(__lcd_ram));
+    ht1621_Update();
+    return;
+}    
+
+//full lcd's context
+void lcd_full(void){
+    memset(__lcd_ram,0xff,sizeof(__lcd_ram));
+    ht1621_Update();
+    return;
 }
 
 //show the default context into lcd
@@ -562,6 +576,9 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
     dev->lcd_sbattery=lcd_battery_power;    
     dev->lcd_stem=lcd_put_tem;
     dev->lcd_stitle=lcd_tile;
+    dev->lcd_clear=lcd_clear;
+    dev->lcd_full=lcd_full;
+    dev->lcd_default_context=lcd_default_context;
     dev->type_def=__lcd;
     *device = (struct hw_device_t*)dev;
     return 0;

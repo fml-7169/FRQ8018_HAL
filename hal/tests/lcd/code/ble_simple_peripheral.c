@@ -241,6 +241,10 @@ static void lcd_timer_func(void *param){
         co_printf("start show default struct for lcd\r\n");
         //lcd_default_context();
     }
+    plcd_dev->lcd_full();
+    co_delay_100us(10*1000);    
+    plcd_dev->lcd_clear();    
+    co_delay_100us(10*1000);    
     co_sprintf(sstr,"%d",svalue);
     plcd_dev->lcd_stem(0,sstr,strlen(sstr),0);
     plcd_dev->lcd_sbattery(svalue%100);    

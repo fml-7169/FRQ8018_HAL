@@ -215,7 +215,16 @@ typedef struct lcd_device_t {
 
     /*init lcd's pin*/
     lcd_TypeDef * (*lcd_sinit)(PortPin_Map *CS, PortPin_Map *WR, PortPin_Map *DA);
+
+    //default context
+    void (*lcd_default_context)(void);    
     
+    //clear lcd's context
+    void (*lcd_clear)(void);    
+    
+    //full lcd's context
+    void (*lcd_full)(void);    
+
     /*Show tile by type*/
     void (*lcd_stitle)(int row,int type,int enable);    
     
