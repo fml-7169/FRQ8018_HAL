@@ -12,8 +12,6 @@
 
 typedef struct _LITE_RBUFFER* LR_handler;
 
-
-
 LR_handler Lite_ring_buffer_init(uint32 length);
 void Lite_ring_buffer_deinit(LR_handler handler);
 int32 Lite_ring_buffer_write_data(LR_handler handler, uint8* p_data, int32 size);

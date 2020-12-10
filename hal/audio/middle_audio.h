@@ -1,5 +1,7 @@
 #ifndef MIDDLE_AUDIO_H_
 #define MIDDLE_AUDIO_H_
+#include "hal_types.h"
+
 
 #define GOVEE_AUDIO_SAMPLE_SIZE 2
 

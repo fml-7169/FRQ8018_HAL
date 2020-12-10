@@ -8,19 +8,10 @@
 #ifndef APP_BRIDGE_H_
 #define APP_BRIDGE_H_
 
-#include "types.h"
-#include "configs.h"
+#include "hal_types.h"
 #include "driver_gpio.h"
-#include "app_button.h"
 #include "middle_ble.h"
-#include "middle_uart.h"
-#include "middle_led.h"
 #include "middle_audio.h"
-#include "middle_infrared.h"
-#include "middle_config.h"
-#include "middle_button.h"
-#include "middle_time.h"
-#include "govee_app.h"
 
 
 
@@ -59,9 +50,8 @@ extern void uart_send (unsigned char *buff, unsigned int len);
 uint32 app_bridge_free_mem_get(void);
 uint32 app_bridge_os_tick_get(void);
 void app_bridge_os_delay_ms(uint32 conut);
-int32 app_bridge_gatt_write_data(u_int8* p_data, uint32 length);
+int32 app_bridge_gatt_write_data(uint8* p_data, uint32 length);
 int32 app_bridge_ble_connect_check(void);
-int32 app_bridge_param_set(govee_sys_t* pt_config);
 int32 app_bridge_spi_send_data(uint8* p_data, uint32 size);
 int32 app_bridge_uart_send_data(uint8* p_data, uint32 size);
 
@@ -79,5 +69,6 @@ int32 app_bridge_ble_mac_get(uint8* ble_mac);
 void app_bridge_gpio_config(int index, int dir);
 void app_bridge_gpio_output(int index, uint32 val);
 uint32 app_bridge_gpio_input(int index);
+
 
 #endif /* APP_BRIDGE_H_ */

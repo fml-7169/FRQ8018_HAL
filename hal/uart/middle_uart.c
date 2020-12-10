@@ -8,23 +8,18 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "timer.h"
 #include "Lite-Rbuffer.h"
-#include "configs.h"
 #include "middle_uart.h"
 #include "govee_log.h"
 #include "app_bridge.h"
-#include "middle_led.h"
 #include "govee_utils.h"
+#include "middle_uart.h"
+#include "driver_uart.h"
+#include "driver_system.h"
+#include "os_mem.h"
 
 
-#if UART_COMMAND_LINE_ENABLE
-static uint8 g_uart_read_data[UART_RX_BUFFER_SIZE] = {0};
-static uint8 g_uart_data_flag = 0;
-static int32 g_uart_data_offset = 0;
-#else
 static LR_handler gt_uart_lr = NULL;
-#endif
 
 
 static void uart_data_callback(uint8* p_data, uint32 size)
@@ -109,6 +104,4 @@ int32 mid_uart_init(int8 baud_rate)
     NVIC_EnableIRQ(UART0_IRQn);
     return 0;
 }
-
-
 

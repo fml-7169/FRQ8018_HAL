@@ -8,7 +8,7 @@
 #ifndef MIDDLE_UART_H_
 #define MIDDLE_UART_H_
 
-#include "types.h"
+#include "hal_types.h"
 
 
 #define UART_COMMAND_LINE_ENABLE        1
@@ -31,8 +31,6 @@ typedef struct
     uart_callback uart_read;
 } uart_config_t;
 
- uint32_t uart_baud_map[12] = {1200,2400,4800,9600,14400,19200,38400,57600,115200,230400,460800,921600};
-
 typedef enum
 {
     BAUD_RATE_1200 = 0,
@@ -48,14 +46,13 @@ typedef enum
     BAUD_RATE_460800,
     BAUD_RATE_921600,
     BAUD_RATE_MAX
-} msg_source_e;
+} baud_rate_e;
 
 
 int32 mid_uart_command_get(uint8* buffer);
 int32 mid_uart_data_size(void);
 int mid_uart_data_get(uint8* buffer, uint32 size);
 int32 mid_uart_data_send(uint8* p_data, uint32 size);
-int32 mid_uart_init(uart_config_t* pt_uart);
-
+int32 mid_uart_init(int8 baud_rate);
 
 #endif /* MIDDLE_UART_H_ */

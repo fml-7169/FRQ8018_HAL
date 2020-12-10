@@ -4,28 +4,29 @@
  *  Created on: 2020-9-11
  *      Author: Weili.Hu
  */
+#include <stdio.h>
 #include <string.h>
-#include "timer.h"
-#include "le_att.h"
-#include "LE_gatt_server.h"
-#include "includes.h"
-#include "tra_hcit.h"
-#include "app_debug.h"
-#include "driver_pwm.h"
-#include "BK3000_reg.h"
-#include "driver_audio.h"
-#include "sys_rand_num_gen.h"
-#include "le_connection.h"
 
+#include "gap_api.h"
+#include "gatt_api.h"
+
+#include "os_timer.h"
+#include "os_mem.h"
+#include "sys_utils.h"
+#include "button.h"
+#include "jump_table.h"
+
+#include "user_task.h"
+#include "driver_pwm.h"
 #include "app_bridge.h"
 #include "driver_gpio.h"
 #include "co_math.h"
 
 #define APP_BRIDGE_UUID_OFFSET_ADDR     0x400
 
-uint32_t app_bridge_free_mem_get(void)
+uint32 app_bridge_free_mem_get(void)
 {
-    return memory_usage_show();
+
 }
 
 uint32 app_bridge_os_tick_get(void)
@@ -38,11 +39,11 @@ void app_bridge_os_delay_ms(uint32 count)
     co_delay_100us(count*10);
 }
 
-int32 app_bridge_gatt_write_data(u_int8* p_data, uint32 length)
+int32 app_bridge_gatt_write_data(uint8* p_data, uint32 length)
 {
     if (LEconnection_LE_Connected())
     {
-        return GATTserver_Characteristic_Write_Local_Value(user_define_notify_handle_tx, length, p_data);
+        //return GATTserver_Characteristic_Write_Local_Value(user_define_notify_handle_tx, length, p_data);
     }
     return 0;
 }
@@ -118,14 +119,12 @@ uint32 app_bridge_rand_number_get(uint32 seed)
 
 int32 app_bridge_ble_mac_get(uint8* ble_mac)
 {
-    struct mac_addr addr;
-    if (!ble_mac)
-    {
-        os_printf("Invalid parameters.\r\n");
+    if(ble_mac==NULL){
         return -1;
     }
+    mac_addr_t addr;
     gap_address_get(&addr);
-    memcpy(ble_mac, &addr.addr[0], 6);
+    memcpy(ble_mac,&addr.addr[0],6);
     return 0;
 }
 
@@ -151,7 +150,7 @@ uint32 app_bridge_timer_create(timer_callback cb, void* args)
 {
     os_timer_t* ptimer = (os_timer_t*)os_malloc(sizeof(os_timer_t));
 
-    if (NULL == timer)
+    if (NULL == ptimer)
     {
         co_printf("Malloc timer buffer failed.\r\n");
         return 0;
