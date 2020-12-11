@@ -192,13 +192,12 @@ void ht1621_Update(void)
 
 static void lcd_set_seg(unsigned char seg_num);
 static void lcd_default_context(void);
-static void lcd_begin(lcd_TypeDef* lcd);
+static void lcd_begin(void);
 
 #define PORT_FUNC_GPIO              0x00
-static void lcd_begin(lcd_TypeDef* lcd) {
-  assert_param(lcd != NULL);
-  __lcd = lcd; // NOTE: This line must exist for all user APIs.
-    
+static void lcd_begin(void) {
+    assert_param(__lcd != NULL);
+    lcd_TypeDef* lcd=__lcd;
 	system_set_port_mux(lcd->CS->GPIOx,lcd->CS->GPIO_Pin_x,PORT_FUNC_GPIO);
 	system_set_port_mux(lcd->WR->GPIOx,lcd->WR->GPIO_Pin_x,PORT_FUNC_GPIO);	
 	system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
@@ -263,8 +262,9 @@ lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *WR, PortPin_Map *DA)
     return NULL;
   ret->CS = CS;
   ret->WR = WR;
-  ret->DA = DA;
-  lcd_begin(ret);
+  ret->DA = DA;  
+  __lcd = ret; // NOTE: This line must exist for all user APIs.
+  lcd_begin();
   lcd_default_context();
   return ret;
 }
@@ -382,13 +382,16 @@ void lcd_full(void){
 //show the default context into lcd
 static void lcd_putchar_cached(int index,unsigned char c) {
   assert_param(__lcd != NULL);
-    DEV_DEBUG("index[%d],char is %c\r\n",index,c);
+    DEV_DEBUG("index[%d],char is %c[%d]\r\n",index,c,c);
+
+    //clear
+    if(c == 0){
+        DEV_DEBUG("index[%d],clear %d\r\n",index,c);              
+        lcd_write_ram(index,0);
+    }
+    
     switch(c)
     { // map the digits to the seg bits
-          case 0:{
-              DEV_DEBUG("index[%d],clear %d\r\n",index,c);              
-              lcd_write_ram(index,0);
-          }break;
           case '0':
               lcd_write_ram(index,char_map[0]);
               break;
@@ -422,8 +425,10 @@ static void lcd_putchar_cached(int index,unsigned char c) {
           case '-':
               lcd_write_ram(index,NEGATIVE);
               break;
-          default: // do nothing, blank digit!
-              break;
+          default:{ // do nothing, blank digit!          
+              lcd_write_ram(index,0);
+              DEV_ERR("lcd write char[%d] is  invaild\r\n",c);
+          }break;
     }
 }
 static void lcd_tem_unit(int pos,int unit){
@@ -578,6 +583,7 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
     dev->lcd_stitle=lcd_tile;
     dev->lcd_clear=lcd_clear;
     dev->lcd_full=lcd_full;
+    dev->lcd_begin=lcd_begin;
     dev->lcd_default_context=lcd_default_context;
     dev->type_def=__lcd;
     *device = (struct hw_device_t*)dev;
