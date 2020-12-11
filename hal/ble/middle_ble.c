@@ -49,19 +49,19 @@ enum
     GOVEE_GATT_IDX_CHAR2_VALUE,
     GOVEE_GATT_IDX_CHAR2_CFG,
     GOVEE_GATT_IDX_CHAR2_USER_DESCRIPTION,
-    GOVEE_GATT_IDX_CHAR3_DECLARATION,
-    GOVEE_GATT_IDX_CHAR3_VALUE,
-    GOVEE_GATT_IDX_CHAR3_CFG,
-    GOVEE_GATT_IDX_CHAR3_USER_DESCRIPTION,
     GOVEE_GATT_IDX_NB,
 };
 
+#if 0
 #define GOVEE_GATT_SPP_UUID_SERVICE        "\x57\x48\x5f\x53\x4b\x43\x4f\x52\x5f\x49\x4c\x4c\x45\x54\x4e\x49"
 #define GOVEE_GATT_SVC1_PROTOCOL_UUID_128  "\x11\x20\x5f\x53\x4b\x43\x4f\x52\x5f\x49\x4c\x4c\x45\x54\x4e\x49"
 #define GOVEE_GATT_SVC1_CMD_UUID_128       "\x12\x20\x5f\x53\x4b\x43\x4f\x52\x5f\x49\x4c\x4c\x45\x54\x4e\x49"
 #define GOVEE_GATT_SVC1_DATA_UUID_128      "\x13\x20\x5f\x53\x4b\x43\x4f\x52\x5f\x49\x4c\x4c\x45\x54\x4e\x49"
+#endif
 
-
+static uint8 g_server_uuid[16] = {0x10, 0x19, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00};
+#define GOVEE_GATT_SVC1_TX_UUID_128     "\x10\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
+#define GOVEE_GATT_SVC1_RX_UUID_128     "\x11\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 
 #define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*10)
 /*********************************************************************
@@ -83,7 +83,7 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_PRIMARY_SERVICE_UUID) },     /* UUID */
                                                     GATT_PROP_WRITE_REQ|GATT_PROP_READ|GATT_PROP_NOTI,                                             /* Permissions */
                                                     UUID_SIZE_16,                                                /* Max size of the value */     /* Service UUID size in service declaration */
-                                                    (uint8_t*)GOVEE_GATT_SPP_UUID_SERVICE,                                      /* Value of the attribute */    /* Service UUID value in service declaration */
+                                                    (uint8_t*)g_server_uuid,                                      /* Value of the attribute */    /* Service UUID value in service declaration */
                                                 },
 
         //Write
@@ -96,8 +96,8 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                 },
         // Characteristic 1 Value                  
         [GOVEE_GATT_IDX_CHAR1_VALUE]                =   {                 
-                                                    { UUID_SIZE_16, GOVEE_GATT_SVC1_PROTOCOL_UUID_128},                 /* UUID */
-                                                    GATT_PROP_WRITE_REQ|GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
+                                                    { UUID_SIZE_16, GOVEE_GATT_SVC1_TX_UUID_128},                 /* UUID */
+                                                    GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
                                                     GATT_CHAR1_VALUE_LEN,                                         /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
                                                 },   
@@ -127,8 +127,8 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                 },
         // Characteristic 2 Value                  
         [GOVEE_GATT_IDX_CHAR2_VALUE]                =   {
-                                                    { UUID_SIZE_16, GOVEE_GATT_SVC1_CMD_UUID_128},                 /* UUID */
-                                                    GATT_PROP_WRITE_REQ|GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
+                                                    { UUID_SIZE_16, GOVEE_GATT_SVC1_RX_UUID_128},                 /* UUID */
+                                                    GATT_PROP_WRITE|GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
                                                     GATT_CHAR1_VALUE_LEN,                                         /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
                                                 },     
@@ -139,44 +139,13 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                     2,                                           /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
                                                 },         
-        // Characteristic 1 User Description
+        // Characteristic 2 User Description
         [GOVEE_GATT_IDX_CHAR2_USER_DESCRIPTION]     =   {
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_CHAR_USER_DESC_UUID) },      /* UUID */
                                                     GATT_PROP_READ,                                             /* Permissions */
                                                     GATT_CHAR1_DESC_LEN,                                          /* Max size of the value */
                                                     (uint8_t *)gatt_char1_desc,                                   /* Value of the attribute */
                                                 },
-
-        
-       // Characteristic 3 Declaration           
-        [GOVEE_GATT_IDX_CHAR3_DECLARATION]          =   {
-                                                    { UUID_SIZE_2, UUID16_ARR(GATT_CHARACTER_UUID) },           /* UUID */
-                                                    GATT_PROP_READ,                                             /* Permissions */
-                                                    0,                                                          /* Max size of the value */
-                                                    NULL,                                                       /* Value of the attribute */
-                                                },
-        // Characteristic 3 Value                  
-        [GOVEE_GATT_IDX_CHAR3_VALUE]                =   {
-                                                    { UUID_SIZE_16, GOVEE_GATT_SVC1_DATA_UUID_128},                 /* UUID */
-                                                    GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
-                                                    GATT_CHAR1_VALUE_LEN,                                         /* Max size of the value */
-                                                    NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
-                                                },     
-        // Characteristic 3 client characteristic configuration
-        [GOVEE_GATT_IDX_CHAR3_CFG]                  =   {
-                                                    { UUID_SIZE_2, UUID16_ARR(GATT_CLIENT_CHAR_CFG_UUID) },     /* UUID */
-                                                    GATT_PROP_READ | GATT_PROP_WRITE,                           /* Permissions */
-                                                    2,                                           /* Max size of the value */
-                                                    NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
-                                                },         
-        // Characteristic 3 User Description
-        [GOVEE_GATT_IDX_CHAR3_USER_DESCRIPTION]     =   {
-                                                    { UUID_SIZE_2, UUID16_ARR(GATT_CHAR_USER_DESC_UUID) },      /* UUID */
-                                                    GATT_PROP_READ,                                             /* Permissions */
-                                                    GATT_CHAR1_DESC_LEN,                                          /* Max size of the value */
-                                                    (uint8_t *)gatt_char1_desc,                                   /* Value of the attribute */
-                                                },
-
 };
 
 
@@ -354,7 +323,7 @@ static uint16_t govee_sp_gatt_msg_handler(gatt_msg_t *p_msg)
  * @return  None.
  */
 
-static void govee_gatt_add_service(void)
+void govee_gatt_add_service(void)
 {
     govee_profile_svc.p_att_tb = govee_gatt_profile_att_table;
     govee_profile_svc.att_nb = GOVEE_GATT_IDX_NB;
@@ -387,8 +356,8 @@ static void sp_start_adv(void)
     gap_set_advertising_param(&adv_param);
     
     // Set advertising data & scan response data
-    gap_set_advertising_data(adv_data, sizeof(adv_data));
-    gap_set_advertising_rsp_data(scan_rsp_data, sizeof(scan_rsp_data));
+    gap_set_advertising_data(adv_data, adv_data_len);
+    gap_set_advertising_rsp_data(scan_rsp_data, scan_rsp_data_len);
     // Start advertising
     co_printf("Start advertising...\r\n");
     gap_start_advertising(0);
@@ -490,7 +459,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
     }
     // set local device name
     gap_set_dev_name(pt_ble->local_name, pt_ble->ble_name_len);
-
+    GOVEE_PRINT(LOG_DEBUG,"%s\r\n",pt_ble->local_name);
     memcpy(adv_data,pt_ble->p_ble_adv,pt_ble->ble_adv_len);
     adv_data_len = pt_ble->ble_adv_len;
 

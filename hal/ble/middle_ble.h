@@ -67,6 +67,6 @@ int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_m
 int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prority);
 int32 mid_ble_event_get(void);
 int32 mid_ble_init(ble_config_t* pt_ble);
-
+void govee_gatt_add_service(void);
 
 #endif /* MIDDLE_BLE_H_ */
