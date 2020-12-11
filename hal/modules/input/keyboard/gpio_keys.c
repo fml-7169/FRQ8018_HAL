@@ -105,10 +105,10 @@ static void gpio_keys_report_event(struct gpio_keys_button *bdata)
     key_device_t * keys_data=(key_device_t *)keys_get_drvdata();
     if(keys_data !=NULL){
         if(keys_data->keys_report.report_func_cb){
-            keys_data->keys_report.report_func_cb(bdata->gpio,bdata->type,0);
+            keys_data->keys_report.report_func_cb(bdata->event,bdata->type,0);
         }
     }
-    DEV_DEBUG("0x%x report key value 0x%x\r\n",bdata->gpio,bdata->type);
+    DEV_DEBUG("0x%x report key value 0x%x\r\n",bdata->event,bdata->type);
 }
 
 static void gpio_keys_work_func(struct work_struct *work)
@@ -251,6 +251,7 @@ static int  gpio_keys_setup_key(struct key_device_t *dev,void *pin_map,int pin_l
         dev->button[i].debounce_interval=keys_config_pin[i].debounce_interval;   //3ms
         dev->button[i].type=KEYS_BUTTON_RELEASED;
         dev->button[i].gpio=keys_config_pin[i].gpio;
+        dev->button[i].event=keys_config_pin[i].event;
         dev->button[i].short_timeout=keys_config_pin[i].short_timeout_ms;
         dev->anti_shake_mask |=dev->button[i].gpio;
     }

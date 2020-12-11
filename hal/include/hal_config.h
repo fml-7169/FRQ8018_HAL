@@ -24,6 +24,7 @@
 #ifdef HAL_KEYS_CONFIG_
 #endif
 struct keys_config_stuct{
+    unsigned int event;
     unsigned int gpio;
     int debounce_interval; //ms
     unsigned int short_timeout_ms; //ms

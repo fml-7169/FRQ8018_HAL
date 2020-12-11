@@ -13,7 +13,8 @@ struct work_struct {
 typedef void (*keys_report_func_t)(unsigned int gpio,int type,int count);
 struct gpio_keys_button {
 	/* Configuration parameters */
-	unsigned int gpio;    
+	unsigned int gpio;        
+    unsigned int event;
 	int type;		/* configure the button as a wake-up source */
 	int debounce_interval;	/* debounce ticks interval in msecs */        
     unsigned int short_timeout;   /* short press ticks interval in msecs */

@@ -192,13 +192,12 @@ void ht1621_Update(void)
 
 static void lcd_set_seg(unsigned char seg_num);
 static void lcd_default_context(void);
-static void lcd_begin(lcd_TypeDef* lcd);
+static void lcd_begin(void);
 
 #define PORT_FUNC_GPIO              0x00
-static void lcd_begin(lcd_TypeDef* lcd) {
-  assert_param(lcd != NULL);
-  __lcd = lcd; // NOTE: This line must exist for all user APIs.
-    
+static void lcd_begin(void) {
+    assert_param(__lcd != NULL);
+    lcd_TypeDef* lcd=__lcd;
 	system_set_port_mux(lcd->CS->GPIOx,lcd->CS->GPIO_Pin_x,PORT_FUNC_GPIO);
 	system_set_port_mux(lcd->WR->GPIOx,lcd->WR->GPIO_Pin_x,PORT_FUNC_GPIO);	
 	system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
@@ -263,8 +262,9 @@ lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *WR, PortPin_Map *DA)
     return NULL;
   ret->CS = CS;
   ret->WR = WR;
-  ret->DA = DA;
-  lcd_begin(ret);
+  ret->DA = DA;  
+  __lcd = ret; // NOTE: This line must exist for all user APIs.
+  lcd_begin();
   lcd_default_context();
   return ret;
 }
@@ -578,6 +578,7 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
     dev->lcd_stitle=lcd_tile;
     dev->lcd_clear=lcd_clear;
     dev->lcd_full=lcd_full;
+    dev->lcd_begin=lcd_begin;
     dev->lcd_default_context=lcd_default_context;
     dev->type_def=__lcd;
     *device = (struct hw_device_t*)dev;

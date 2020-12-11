@@ -216,6 +216,10 @@ typedef struct lcd_device_t {
     /*init lcd's pin*/
     lcd_TypeDef * (*lcd_sinit)(PortPin_Map *CS, PortPin_Map *WR, PortPin_Map *DA);
 
+    
+    //init gpio 
+    void (*lcd_begin)(void);
+
     //default context
     void (*lcd_default_context)(void);    
     
