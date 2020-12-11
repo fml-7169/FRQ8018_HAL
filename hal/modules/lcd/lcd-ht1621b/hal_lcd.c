@@ -382,13 +382,16 @@ void lcd_full(void){
 //show the default context into lcd
 static void lcd_putchar_cached(int index,unsigned char c) {
   assert_param(__lcd != NULL);
-    DEV_DEBUG("index[%d],char is %c\r\n",index,c);
+    DEV_DEBUG("index[%d],char is %c[%d]\r\n",index,c,c);
+
+    //clear
+    if(c == 0){
+        DEV_DEBUG("index[%d],clear %d\r\n",index,c);              
+        lcd_write_ram(index,0);
+    }
+    
     switch(c)
     { // map the digits to the seg bits
-          case 0:{
-              DEV_DEBUG("index[%d],clear %d\r\n",index,c);              
-              lcd_write_ram(index,0);
-          }break;
           case '0':
               lcd_write_ram(index,char_map[0]);
               break;
@@ -422,8 +425,10 @@ static void lcd_putchar_cached(int index,unsigned char c) {
           case '-':
               lcd_write_ram(index,NEGATIVE);
               break;
-          default: // do nothing, blank digit!
-              break;
+          default:{ // do nothing, blank digit!          
+              lcd_write_ram(index,0);
+              DEV_ERR("lcd write char[%d] is  invaild\r\n",c);
+          }break;
     }
 }
 static void lcd_tem_unit(int pos,int unit){
