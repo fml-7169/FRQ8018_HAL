@@ -120,13 +120,27 @@ $(eval $(3): \
     $(SRC_FILES) $(call target_specific, SRC_FILES, $(1)))) \
 $(eval $(4): \
   $(call get_object_files, $(1), $(2), \
-    $(SRC_FILES) $(call target_specific, SRC_FILES, $(1)))) \
+    $(SRC_FILES) $(foreach find_name, \
+		$(foreach dir_name, \
+			$(1), \
+			$(shell find ../ -name $(dir_name) -type d)),\
+		$(wildcard $(find_name)/*.c)) \
+	$(call target_specific, SRC_FILES, $(1)))) \
 $(eval -include $(DEPENDENCIES)) \
 $(eval INC_PATHS_$(strip $(1)) := \
   $(call get_inc_paths, \
-    $(INC_FOLDERS) $(call target_specific, INC_FOLDERS, $(1))))
+    $(INC_FOLDERS) \
+	$(dir $(foreach find_name, \
+		$(foreach dir_name, \
+			$(1), \
+			$(shell find ../ -name $(dir_name) -type d)),\
+		$(wildcard $(find_name)/*.c)))  \ 
+	$(call target_specific, INC_FOLDERS, $(1))))
 endef
 
+#SRC_DIR :=$(foreach dir_name, $(TEST_DIR), $(shell find ../ -name $(dir_name) -type d))
+#SRC_DIR_IFILES :=$(foreach find_name, $(SRC_DIR), $(wildcard $(find_name)/*.h))
+#$(foreach find_name, $(SRC_DIR),$(wildcard $(find_name)/*.c)) \
 # $1 target name
 define define_target
 $(eval OUTPUT_FILE := $(OUTPUT_DIRECTORY)/$(strip $(1))) \
@@ -135,7 +149,7 @@ $(eval $(1): $(OUTPUT_FILE).a \
 $(call prepare_build, $(1), $(OUTPUT_FILE).inc, $(OUTPUT_FILE).out, $(OUTPUT_FILE).a)
 endef
 
-.PHONY: $(TARGETS) all libs
+.PHONY: $(TARGETS) all
 
 all: $(TARGETS)
 
@@ -156,8 +170,9 @@ $(OUTPUT_DIRECTORY)/%/.: | $(OUTPUT_DIRECTORY)
 	$(NO_ECHO)$(CC) -MP -MD  -x assembler-with-cpp -c -o $@ $($@) $(ASMFLAGS)
 %.a:
 	$(info Generate: $@)
-	$(NO_ECHO)$(AR)  $@ $^
-	$(CP) $@ $(HAL_LIBS)
+	$(NO_ECHO)$(AR)  $(dir $@)lib$(notdir $@) $^
+	$(CP) $(dir $@)lib$(notdir $@) $(INSTALL_LIBS)
+	$(foreach inc_files, $(INSTALL_INC_FILES), $(shell $(CP) $(inc_files) $(INSTALL_INC)))
 	
 
 endif # ifneq (,$(filter clean, $(MAKECMDGOALS)))

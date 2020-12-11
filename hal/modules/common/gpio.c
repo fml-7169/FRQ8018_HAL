@@ -16,9 +16,18 @@
  * =====================================================================================
  */
 #include <stdlib.h>
-#include "gpio.h"
 #include "driver_pmu_regs.h"
 #include "driver_pmu.h"
+#include "driver_system.h"
+#include "co_printf.h"
+
+#include "gpio.h"
+
+#define DEV_ERR(format,...) do { \
+co_printf("[HAL_GPIO] error:"); \
+co_printf(format,##__VA_ARGS__); \
+} while(0)
+
 #if 0
 #define GPIO_PA0              (1<<0)
 #define GPIO_PA1              (1<<1)
@@ -94,7 +103,29 @@ void gpio_pmu_wakeupsrc(unsigned int        gpios){
             | GPIO_NAME(PD,5)| GPIO_NAME(PD,6)| GPIO_NAME(PD,7);    
     port_bit=gp_port &gpios;
     if(port_bit ){
-        pmu_set_pin_pull(GPIO_PORT_B,port_bit>>(GPOUP_COUNT*3), true);
+        pmu_set_pin_pull(GPIO_PORT_D,port_bit>>(GPOUP_COUNT*3), true);
     }
     pmu_port_wakeup_func_set(gpios);
 }
+
+
+void gpio_adc(int adc_index){  //only support four adc
+    switch(adc_index){
+        case ADC_CH0:{
+    		system_set_port_mux(GPIO_PORT_D,GPIO_BIT_4,PORTD4_FUNC_ADC0);
+        }break;
+        case ADC_CH1:{
+    		system_set_port_mux(GPIO_PORT_D,GPIO_BIT_5,PORTD5_FUNC_ADC1);
+        }break;
+        case ADC_CH2:{
+    		system_set_port_mux(GPIO_PORT_D,GPIO_BIT_6,PORTD6_FUNC_ADC2);
+        }break;        
+        case ADC_CH3:{
+    		system_set_port_mux(GPIO_PORT_D,GPIO_BIT_7,PORTD7_FUNC_ADC3);
+        }break;    
+        default:{
+            DEV_ERR(" gpio can't config to adc %d\r\n",adc_index);
+        }break;
+    }
+}
+

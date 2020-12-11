@@ -21,9 +21,13 @@
 #include "gpio_keys.h"
 #include "driver_pmu_regs.h"
 #include "driver_pmu.h"
+
+
+#include "os_timer.h"
+
 #include "user_task.h"
 #include "hal_config.h"
-
+#include "hal_lcd.h"
 /*
  * MACROS (ºê¶¨Òå)
  */
@@ -206,7 +210,52 @@ static void sp_start_adv(void)
 	co_printf("Start advertising...\r\n");
 	gap_start_advertising(0);
 }
+PortPin_Map LcdPinMap[]={
+    {GPIO_PORT_A,GPIO_BIT_4},  //CS
+    {GPIO_PORT_A,GPIO_BIT_0},   //WR
+    {GPIO_PORT_A,GPIO_BIT_1},   //DA
+};
+    
+lcd_TypeDef* plcd_TypeDef=NULL;
+os_timer_t lcd_timer;
+lcd_device_t* plcd_dev=NULL;
 
+//extern struct hw_module_t hal_module_info_lcd;
+static lcd_device_t* get_device(hw_module_t* module, char const* name)
+{
+    int err;
+    hw_device_t* device;
+    err = module->methods->open(module, name, &device);
+    if (err == 0) {
+        return (lcd_device_t*)device;
+    } else {
+        return NULL;
+    }
+}
+
+static void lcd_timer_func(void *param){        
+    static int scount=0;
+    int svalue=12+scount;
+    char sstr[12]={0};
+    if(scount == 0){
+        co_printf("start show default struct for lcd\r\n");
+        //lcd_default_context();
+    }
+    plcd_dev->lcd_full();
+    co_delay_100us(10*1000);    
+    plcd_dev->lcd_clear();    
+    co_delay_100us(10*1000);    
+    co_sprintf(sstr,"%d",svalue);
+    plcd_dev->lcd_stem(0,sstr,strlen(sstr),0);
+    plcd_dev->lcd_sbattery(svalue%100);    
+    int i=0;
+    for(i=0;i<LCD_TYPE_MUTE;i++){
+        plcd_dev->lcd_stitle(0,i,scount%2);
+        plcd_dev->lcd_stitle(1,i,scount%2);
+    }
+    scount++;
+    return;
+}
 
 /*********************************************************************
  * @fn      simple_peripheral_init
@@ -218,18 +267,7 @@ static void sp_start_adv(void)
  *
  * @return  None.
  */
-extern const struct hw_module_t hal_module_info_key;
-static key_device_t* get_device(hw_module_t* module, char const* name)
-{
-    int err;
-    hw_device_t* device;
-    err = module->methods->open(module, name, &device);
-    if (err == 0) {
-        return (key_device_t*)device;
-    } else {
-        return NULL;
-    }
-}
+
 void simple_peripheral_init(void)
 {
     // set local device name
@@ -258,12 +296,11 @@ void simple_peripheral_init(void)
     gap_address_get(&addr);
     co_printf("Local BDADDR: 0x%2X%2X%2X%2X%2X%2X\r\n", addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3], addr.addr[4], addr.addr[5]);
 
-    pmu_set_pin_pull(GPIO_PORT_D, (1<<GPIO_BIT_6), true);
-    pmu_set_pin_pull(GPIO_PORT_C, (1<<GPIO_BIT_5), true);
-    pmu_port_wakeup_func_set(GPIO_PD6|GPIO_PC5);
-    int err;
-    key_device_t* pkey_dev= get_device(&hal_module_info_key, NULL);
-    pkey_dev->key_report_init(user_report_keys);
+    plcd_dev= get_device(&hal_module_info_lcd, NULL);
+    plcd_dev->lcd_sinit(&LcdPinMap[0],&LcdPinMap[1],&LcdPinMap[2]);
+    
+    os_timer_init(&lcd_timer, lcd_timer_func, NULL);    
+    os_timer_start(&lcd_timer, 1000*10, true);
     // Adding services to database
     sp_gatt_add_service();  
 }

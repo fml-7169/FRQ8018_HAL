@@ -1,5 +1,5 @@
 PROJECT_NAME     := fr8016h_ble_simple_peripheral
-TARGETS          := hal_keyboard
+TARGETS          := hal_lcd
 OUTPUT_DIRECTORY := build
 
 SDK_ROOT := ../../../../FR801xH-SDK
@@ -28,7 +28,7 @@ SRC_FILES += \
               $(SDK_ROOT)/components/modules/platform/source/app_boot_vectors.c \
               $(SDK_ROOT)/components/modules/patch/patch.c
 SRC_FILES += \
-			 $(HAL_DIR)/modules/input/keyboard/gpio_keys.c \
+			 $(HAL_DIR)/modules/lcd/lcd-ht1621b/hal_lcd.c \
 			 $(HAL_DIR)/modules/common/gpio.c \
 
 # Include folders common to all targets
@@ -47,7 +47,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)
 INC_FOLDERS += \
 	   $(HAL_DIR)/include \
-	   $(HAL_DIR)/modules/input/keyboard
+	   $(HAL_DIR)/modules/lcd/lcd-ht1621b/
 	   
 # Libraries common to all targets
 LIB_FILES += -lfr8010h_stack

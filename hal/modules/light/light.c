@@ -21,15 +21,30 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+
+#include "driver_pmu.h"
+#include "driver_iomux.h"
+#include "sys_utils.h"
 #include "lights.h"
 #include "os_mem.h"
 #include "hal_config.h"
-
+#if 0
 #define LOGD(...)
 #define LOGE(...)
 #define LOGI(...)
 #define LOGV(...)
+#else
+#define LOGD(format,...) do { \
+    co_printf("[LIGHTS] debug:"); \
+    co_printf(format,##__VA_ARGS__); \
+} while(0)
 
+#define LOGE(format,...) do { \
+    co_printf("[LIGHTS] error:"); \
+    co_printf(format,##__VA_ARGS__); \
+} while(0)
+
+#endif
 struct led_prop {
     const char *filename;
     int fd;
@@ -206,12 +221,16 @@ static int set_light_buttons(struct light_device_t* dev,
 static int set_light_backlight(struct light_device_t* dev,
         struct light_state_t const* state)
 {
-    int err = 0;
-    int brightness = rgb_to_brightness(state);
-    LOGV("%s brightness=%d color=0x%08x",
-            __FUNCTION__, brightness, state->color);
-    err = write_int(&leds[LCD_BACKLIGHT].brightness, brightness);
-    return err;
+    if(dev == NULL || state == NULL)
+        return -1;
+    if(!state->color){ //off
+        pmu_set_gpio_value(dev->plight_portPin_map->GPIOx,\
+                        BIT(dev->plight_portPin_map->GPIO_Pin_x), 0);
+    }else{ //on
+        pmu_set_gpio_value(dev->plight_portPin_map->GPIOx,\
+                        BIT(dev->plight_portPin_map->GPIO_Pin_x), 1);
+    }
+    return 0;
 }
 // 设置低电light
 static int set_light_battery(struct light_device_t* dev,
@@ -249,7 +268,34 @@ static int set_light_attention(struct light_device_t* dev,
     }
     return 0;
 }
- 
+static int init_light_backlight(struct light_device_t *dev,light_portPin_map *pportPin_map,int map_count)
+{
+    int i=0;
+    if(dev ==NULL || pportPin_map == NULL){
+        return -1;
+    }
+    LOGD("name is %s,gpiox is 0x%x,gpio_pin is 0x%x\r\n",pportPin_map[0].name,\
+                                                        pportPin_map[0].GPIOx,\
+                                                        pportPin_map[0].GPIO_Pin_x);
+    dev->plight_portPin_map=os_calloc(1, sizeof(light_portPin_map));
+    for(i=0;i<map_count;i++){
+        if (0 == strcmp(LIGHT_ID_BACKLIGHT, pportPin_map[i].name)) {
+            dev->plight_portPin_map->GPIOx=pportPin_map[i].GPIOx;            
+            dev->plight_portPin_map->GPIO_Pin_x=pportPin_map[i].GPIO_Pin_x;
+            pmu_set_port_mux(dev->plight_portPin_map->GPIOx,\
+                            dev->plight_portPin_map->GPIO_Pin_x,\
+                            PMU_PORT_MUX_GPIO);
+            pmu_set_pin_to_PMU(dev->plight_portPin_map->GPIOx,\
+                            BIT(dev->plight_portPin_map->GPIO_Pin_x) );
+            pmu_set_pin_dir(dev->plight_portPin_map->GPIOx,\
+                            BIT(dev->plight_portPin_map->GPIO_Pin_x), \
+                            GPIO_DIR_OUT);  
+            
+            LOGD("gpiox is 0x%x,gpio_pin is 0x%x\r\n",dev->plight_portPin_map->GPIOx,\
+                                                    dev->plight_portPin_map->GPIO_Pin_x);
+        }
+    }
+}
 // 关闭light
 static int close_lights(struct light_device_t *dev)
 {
@@ -265,9 +311,11 @@ static int open_lights(const struct hw_module_t* module, char const* name,
 {
     int (*set_light)(struct light_device_t* dev,
             struct light_state_t const* state);
- 
+    int (*init_light)(struct light_device_t* dev,
+        light_portPin_map *pportPin_map,int map_count);
     if (0 == strcmp(LIGHT_ID_BACKLIGHT, name)) {  // 根据名称设置相应的接口
         set_light = set_light_backlight;
+        init_light= init_light_backlight;
     }
     else if (0 == strcmp(LIGHT_ID_BUTTONS, name)) {
         set_light = set_light_buttons;
@@ -285,7 +333,7 @@ static int open_lights(const struct hw_module_t* module, char const* name,
         LOGE("name %s\n", name);
         return -1;
     }
- 
+    LOGD("name is %s\r\n",name);
     // 创建light_device_t
     light_device_t *dev = os_malloc(sizeof(light_device_t));
     memset(dev, 0, sizeof(*dev));
@@ -296,7 +344,7 @@ static int open_lights(const struct hw_module_t* module, char const* name,
     // 关闭接口
     dev->common.close = (int (*)(struct hw_device_t*))close_lights;
     dev->set_light = set_light;
- 
+    dev->init_light=init_light;
     *device = (struct hw_device_t*)dev;
     return 0;
 }
