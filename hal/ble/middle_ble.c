@@ -25,6 +25,8 @@ static uint8_t gatt_char2_value[GATT_CHAR2_VALUE_LEN] = {0};
 static const uint8_t gatt_char1_desc[GATT_CHAR1_DESC_LEN] = "for gatt Read";
 static const uint8_t gatt_char2_desc[GATT_CHAR2_DESC_LEN] = "for gatt Write";
 
+static LR_handler gt_ble_lr = NULL;
+
 /*
  * TYPEDEFS (类型定义)
  */
@@ -160,6 +162,7 @@ static uint16_t adv_data_len = 0;
 // GAP-Scan response内容,最长31个字节.短一点的内容可以节省广播时的系统功耗.
 static uint8_t scan_rsp_data[31] = {0x00};
 static uint16_t scan_rsp_data_len = 0;
+static uint8_t g_att_idx = 0;
 
  /*
  * LOCAL FUNCTIONS (本地函数)
@@ -253,12 +256,26 @@ int32 mid_ble_config_update(uint8* ble_mac)
  *
  * @return  读请求的长度.
  */
-static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
+
+uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
 {
-    return;
+    for(uint8_t i=0;i<data_len;i++) 
+        co_printf("send_data[%d]=%x\r\n",i,send_data[i]);
     
-    co_printf("Read request: len: %d  value: 0x%x 0x%x \r\n", *len, (p_read)[0], (p_read)[*len-1]);
-    
+    gatt_ntf_t ntf_att;
+    ntf_att.att_idx = 8;
+    co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
+    ntf_att.conidx = 0; 
+    ntf_att.svc_id = g_att_idx; 
+    ntf_att.data_len = data_len; 
+    ntf_att.p_data = send_data;
+    gatt_notification(ntf_att);
+}
+
+
+static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
+{   
+    co_printf("%d Read request: len: %d  value: 0x%x 0x%x \r\n", att_idx ,*len, (p_read)[0], (p_read)[*len-1]);
 }
 
 /*********************************************************************
@@ -279,8 +296,18 @@ static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
  */
 static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)
 {
-    return;
+    g_att_idx = att_idx;
+    co_printf(" %d Write request: len: %d, 0x%x \r\n",att_idx, len);
+    uint16_t i = 0;
+    for(i=0;i<len;i++){
+        co_printf(" 0x%x\t",write_buf[i]);
+    }
+    msg_packet_t ble_msg;
+    memset(&ble_msg, 0, sizeof(msg_packet_t));
+    ble_msg.t_header.source = MSG_PHONE_BLE;
+    memcpy(&ble_msg.t_message, write_buf, len);
 
+    Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&ble_msg, sizeof(msg_packet_t));
 }
 
 /*********************************************************************
@@ -489,6 +516,14 @@ int32 mid_ble_init(ble_config_t* pt_ble)
     
     // Adding services to database
     govee_gatt_add_service();
+
+    gt_ble_lr = Lite_ring_buffer_init(BLE_GATT_MSG_BUFFER_SIZE);
+    if (gt_ble_lr == NULL)
+    {
+        GOVEE_PRINT(LOG_ERROR, "BLE ring buffer init failed.\r\n");
+        return -1;
+    }
+
     return 0;
 }
 

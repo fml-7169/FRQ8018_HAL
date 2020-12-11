@@ -50,7 +50,8 @@ int32 mid_uart_data_get(uint8* buffer, uint32 size)
 
 int32 mid_uart_data_send(uint8* p_data, uint32 size)
 {
-    return app_bridge_uart_send_data(p_data, size);
+    uart_write(UART0,p_data,size);
+    return 0;
 }
 
 /*********************************************************************
@@ -75,6 +76,7 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
         while(uart_reg_ram->lsr & 0x01)
         {
             Lite_ring_buffer_write_data(gt_uart_lr, (uint8*)&(uart_reg_ram->u1.data), 1);
+            //uart_putc_noint_no_wait(UART1,uart_reg_ram->u1.data);
         }
     }
     else if(int_id == 0x06)
@@ -93,15 +95,13 @@ int32 mid_uart_init(int8 baud_rate)
         GOVEE_PRINT(LOG_ERROR, "Uart ring buffer init failed.\r\n");
         return -1;
     }
-    if(baud_rate>=BAUD_RATE_MAX){
-        baud_rate = BAUD_RATE_115200;
-    }
     system_set_port_pull(GPIO_PD4, true);
     system_set_port_mux(GPIO_PORT_D, GPIO_BIT_4, PORTD4_FUNC_UART0_RXD);
     system_set_port_mux(GPIO_PORT_D, GPIO_BIT_5, PORTD5_FUNC_UART0_TXD);
     uart_init(UART0, baud_rate);
     //uart_init_x(gAT_buff_env.uart_param);
     NVIC_EnableIRQ(UART0_IRQn);
+    GOVEE_PRINT(LOG_DEBUG,"mid_uart_init %d\r\n",baud_rate);
+    uart_write(UART0,"hello,world",11);
     return 0;
 }
-
