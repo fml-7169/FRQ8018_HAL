@@ -8,85 +8,26 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "timer.h"
 #include "Lite-Rbuffer.h"
-#include "configs.h"
 #include "middle_uart.h"
 #include "govee_log.h"
 #include "app_bridge.h"
-#include "middle_led.h"
 #include "govee_utils.h"
+#include "middle_uart.h"
+#include "driver_uart.h"
+#include "driver_system.h"
+#include "os_mem.h"
 
 
-#if UART_COMMAND_LINE_ENABLE
-static uint8 g_uart_read_data[UART_RX_BUFFER_SIZE] = {0};
-static uint8 g_uart_data_flag = 0;
-static int32 g_uart_data_offset = 0;
-#else
 static LR_handler gt_uart_lr = NULL;
-#endif
 
 
-#if UART_COMMAND_LINE_ENABLE
-static void uart_data_callback(uint8* p_data, uint32 size)
-{
-    if (g_uart_data_flag || g_uart_data_offset >= UART_RX_BUFFER_SIZE)
-    {
-        return;
-    }
-
-    if (size == 3 && p_data[0] == 0x1b && p_data[1] == 0x5b) // for direction key
-    {
-        return;
-    }
-
-    if (g_uart_data_offset + size > UART_RX_BUFFER_SIZE)
-    {
-        memcpy(g_uart_read_data + g_uart_data_offset, p_data, UART_RX_BUFFER_SIZE - g_uart_data_offset);
-        g_uart_data_offset = UART_RX_BUFFER_SIZE;
-    }
-    else
-    {
-        memcpy(g_uart_read_data + g_uart_data_offset, p_data, size);
-        g_uart_data_offset += size;
-    }
-
-    if (app_bridge_os_tick_get() >= 300)
-    {
-        p_data[size] = '\0';
-        app_bridge_printf("%s", p_data);
-    }
-
-    if (g_uart_data_offset >= UART_RX_BUFFER_SIZE || p_data[size - 1] == 0x0d)
-    {
-        g_uart_data_flag = 1;
-    }
-}
-#else
 static void uart_data_callback(uint8* p_data, uint32 size)
 {
     Lite_ring_buffer_write_data(gt_uart_lr, (uint8*)p_data, size);
 }
-#endif
 
 
-#if UART_COMMAND_LINE_ENABLE
-int32 mid_uart_command_get(uint8* buffer)
-{
-    int ret = -1;
-
-    if (g_uart_data_flag && g_uart_data_offset > 0)
-    {
-        ret = g_uart_data_offset;
-        memcpy(buffer, g_uart_read_data, g_uart_data_offset);
-        memset(g_uart_read_data, 0, UART_RX_BUFFER_SIZE);
-        g_uart_data_offset = 0;
-        g_uart_data_flag = 0;
-    }
-
-    return ret;
-}
-#else
 int32 mid_uart_data_size(void)
 {
     return Lite_ring_buffer_size_get(gt_uart_lr);
@@ -106,25 +47,61 @@ int32 mid_uart_data_get(uint8* buffer, uint32 size)
 
     return 0;
 }
-#endif
 
 int32 mid_uart_data_send(uint8* p_data, uint32 size)
 {
     return app_bridge_uart_send_data(p_data, size);
 }
 
-int32 mid_uart_init(uart_config_t* pt_uart)
+/*********************************************************************
+ * @fn      uart0_isr_ram
+ *
+ * @brief   UART0 interruption, when uart0 FIFO received charaters, this ISR will be called
+ *          
+ *
+ * @param   None 
+ *           
+ *
+ * @return  None
+ */
+__attribute__((section("ram_code"))) void uart0_isr_ram(void)
 {
-#if (!UART_COMMAND_LINE_ENABLE)
+    uint8_t int_id;
+    volatile struct uart_reg_t * const uart_reg_ram = (volatile struct uart_reg_t *)UART0_BASE;
+    int_id = uart_reg_ram->u3.iir.int_id;
+
+    if(int_id == 0x04 || int_id == 0x0c )   /* Receiver data available or Character time-out indication */
+    {
+        while(uart_reg_ram->lsr & 0x01)
+        {
+            Lite_ring_buffer_write_data(gt_uart_lr, (uint8*)&(uart_reg_ram->u1.data), 1);
+        }
+    }
+    else if(int_id == 0x06)
+    {
+        uart_reg_ram->lsr = uart_reg_ram->lsr;
+    }
+}
+
+
+int32 mid_uart_init(int8 baud_rate)
+{
+
     gt_uart_lr = Lite_ring_buffer_init(UART_RX_BUFFER_SIZE);
     if (gt_uart_lr == NULL)
     {
         GOVEE_PRINT(LOG_ERROR, "Uart ring buffer init failed.\r\n");
         return -1;
     }
-#endif
-    pt_uart->uart_read = uart_data_callback;
-
+    if(baud_rate>=BAUD_RATE_MAX){
+        baud_rate = BAUD_RATE_115200;
+    }
+    system_set_port_pull(GPIO_PD4, true);
+    system_set_port_mux(GPIO_PORT_D, GPIO_BIT_4, PORTD4_FUNC_UART0_RXD);
+    system_set_port_mux(GPIO_PORT_D, GPIO_BIT_5, PORTD5_FUNC_UART0_TXD);
+    uart_init(UART0, baud_rate);
+    //uart_init_x(gAT_buff_env.uart_param);
+    NVIC_EnableIRQ(UART0_IRQn);
     return 0;
 }
 

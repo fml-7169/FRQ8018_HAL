@@ -6,7 +6,6 @@
  */
 
 #include <string.h>
-#include "types.h"
 #include "govee_log.h"
 #include "middle_audio.h"
 #include "Lite-Rbuffer.h"

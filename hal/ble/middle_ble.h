@@ -1,6 +1,5 @@
-#ifndef MIDDLE_BLE_H_
-#define MIDDLE_BLE_H_
-
+#ifndef _MIDDLE_BLE_H_
+#define _MIDDLE_BLE_H_
 #include "hal_types.h"
 
 #define BLE_PKG_DATA_LEN            20
@@ -23,14 +22,10 @@ typedef struct
 {
     uint8* p_ble_adv;
     uint8* p_ble_resp;
+    uint8* local_name;
     int32 ble_adv_len;
     int32 ble_resp_len;
-    uint8* p_gatt_uuid;
-    uint8* p_rx_uuid;
-    uint8* p_tx_uuid;
-    uint8 uuid_bit_size;
-    read_callback ble_recv;
-    event_callback ble_event;
+    int32 ble_name_len;
 } ble_config_t;
 
 typedef struct _ble_msg_t
@@ -65,12 +60,13 @@ typedef struct _msg_packet_t
 
 
 uint8 mid_ble_check_sum(uint8* p_data, uint32 length);
-int32 mid_ble_config_update(uint8* ble_mac);
+int32 mid_ble_mac_get(uint8* ble_mac);
 int32 mid_ble_msg_read(msg_packet_t* pt_packet);
 int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len);
 int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_msg_t* output);
 int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prority);
 int32 mid_ble_event_get(void);
 int32 mid_ble_init(ble_config_t* pt_ble);
+
 
 #endif /* MIDDLE_BLE_H_ */
