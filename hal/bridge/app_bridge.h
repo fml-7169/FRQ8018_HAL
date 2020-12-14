@@ -14,45 +14,16 @@
 #include "middle_audio.h"
 
 
-
-#define APP_BRIDGE_CONFIG_LENGTH    GOVEE_CONFIG_DATA_MAX_LENGTH
-#define APP_BRIDGE_BUTTON_COUNTS    GOVEE_BUTTON_COUNT
-
-#if (GOVEE_DEVICE_TYPE == DEVICE_TYPE_RGB)
-#define APP_BRIDGE_PWM_ENABLE
-#elif (GOVEE_DEVICE_TYPE == DEVICE_TYPE_RGBWW)
-#define APP_BRIDGE_PWM_ENABLE
-#define APP_BRIDGE_PWM_WW_ENABLE
-#elif (GOVEE_DEVICE_TYPE == DEVICE_TYPE_RGBIC)
-#define APP_BRIDGE_SPI_ENABLE
-#else
-#error "GOVEE_DEVICE_TYPE is invalid."
-#endif
-
-#if GOVEE_DEVICE_WITH_INFRARED
-#define APP_BRIDGE_IRDA_ENABLE
-#endif
-
-#if GOVEE_DEVICE_WITH_AUDIO_ADC
-#define APP_BRIDGE_AUDIO_ADC_ENABLE
-#endif
-
-
-#if GOVEE_LOG_PRINT_ENABLE
-#define APP_BRIDGE_PRINT_ENABLE
-#endif
-
 extern int32 co_printf(const char *fmt, ...);
 extern void uart_send (unsigned char *buff, unsigned int len);
 
 #define app_bridge_printf(fmt, ...)    co_printf(fmt, ##__VA_ARGS__)
 
-uint32 app_bridge_free_mem_get(void);
+
 uint32 app_bridge_os_tick_get(void);
 void app_bridge_os_delay_ms(uint32 conut);
 int32 app_bridge_gatt_write_data(uint8* p_data, uint32 length);
 int32 app_bridge_ble_connect_check(void);
-int32 app_bridge_spi_send_data(uint8* p_data, uint32 size);
 int32 app_bridge_uart_send_data(uint8* p_data, uint32 size);
 
 void app_bridge_pwm_init(uint8 PWMindex, uint8 enableWork, uint16 PWMperiod, uint16 dutyCycle);

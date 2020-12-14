@@ -41,7 +41,7 @@ uint8_t govee_sp_svc_id = 0;
 static gatt_service_t govee_profile_svc;
 
 enum
-{   
+{
     GOVEE_GATT_IDX_SERVICE,
     GOVEE_GATT_IDX_CHAR1_DECLARATION,
     GOVEE_GATT_IDX_CHAR1_VALUE,
@@ -89,20 +89,20 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                 },
 
         //Write
-        // Characteristic 1 Declaration           
+        // Characteristic 1 Declaration
         [GOVEE_GATT_IDX_CHAR1_DECLARATION]          =   {
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_CHARACTER_UUID) },           /* UUID */
                                                     GATT_PROP_READ,                                             /* Permissions */
                                                     0,                                                          /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */
                                                 },
-        // Characteristic 1 Value                  
-        [GOVEE_GATT_IDX_CHAR1_VALUE]                =   {                 
+        // Characteristic 1 Value
+        [GOVEE_GATT_IDX_CHAR1_VALUE]                =   {
                                                     { UUID_SIZE_16, GOVEE_GATT_SVC1_TX_UUID_128},                 /* UUID */
                                                     GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
                                                     GATT_CHAR1_VALUE_LEN,                                         /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
-                                                },   
+                                                },
 
         // Characteristic 1 client characteristic configuration
         [GOVEE_GATT_IDX_CHAR1_CFG]                  =   {
@@ -110,7 +110,7 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                     GATT_PROP_READ | GATT_PROP_WRITE,                           /* Permissions */
                                                     2,                                           /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
-                                                },    
+                                                },
         // Characteristic 1 User Description
         [GOVEE_GATT_IDX_CHAR1_USER_DESCRIPTION]     =   {
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_CHAR_USER_DESC_UUID) },      /* UUID */
@@ -120,27 +120,27 @@ const gatt_attribute_t govee_gatt_profile_att_table[GOVEE_GATT_IDX_NB] =
                                                 },
 
         //Read
-        // Characteristic 2 Declaration           
+        // Characteristic 2 Declaration
         [GOVEE_GATT_IDX_CHAR2_DECLARATION]          =   {
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_CHARACTER_UUID) },           /* UUID */
                                                     GATT_PROP_READ,                                             /* Permissions */
                                                     0,                                                          /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */
                                                 },
-        // Characteristic 2 Value                  
+        // Characteristic 2 Value
         [GOVEE_GATT_IDX_CHAR2_VALUE]                =   {
                                                     { UUID_SIZE_16, GOVEE_GATT_SVC1_RX_UUID_128},                 /* UUID */
                                                     GATT_PROP_WRITE|GATT_PROP_READ|GATT_PROP_NOTI,                           /* Permissions */
                                                     GATT_CHAR1_VALUE_LEN,                                         /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
-                                                },     
+                                                },
         // Characteristic 2 client characteristic configuration
         [GOVEE_GATT_IDX_CHAR2_CFG]                  =   {
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_CLIENT_CHAR_CFG_UUID) },     /* UUID */
                                                     GATT_PROP_READ | GATT_PROP_WRITE,                           /* Permissions */
                                                     2,                                           /* Max size of the value */
                                                     NULL,                                                       /* Value of the attribute */    /* Can assign a buffer here, or can be assigned in the application by user */
-                                                },         
+                                                },
         // Characteristic 2 User Description
         [GOVEE_GATT_IDX_CHAR2_USER_DESCRIPTION]     =   {
                                                     { UUID_SIZE_2, UUID16_ARR(GATT_CHAR_USER_DESC_UUID) },      /* UUID */
@@ -186,18 +186,8 @@ static uint8 ble_check_sum(uint8* p_data, uint32 length)
     return check_sum;
 }
 
-/*
+
 static int32 ble_msg_write(ble_msg_t* pt_message)
-{
-
-}
-
-static void ble_msg_callback(uint8* p_data, uint32 data_len)
-{
-
-}
-
-static void ble_event_callback(uint8 type, void* args)
 {
 
 }
@@ -227,20 +217,15 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
 
 }
 
-int32 mid_ble_config_update(uint8* ble_mac)
-{
-
-}
-*/
 
 /**
  * Copyright (c) 2019, Freqchip
- * 
+ *
  * All rights reserved.
- * 
- * 
+ *
+ *
  */
- 
+
 /*********************************************************************
  * @fn      sp_gatt_read_cb
  *
@@ -259,22 +244,22 @@ int32 mid_ble_config_update(uint8* ble_mac)
 
 uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
 {
-    for(uint8_t i=0;i<data_len;i++) 
+    for(uint8_t i=0;i<data_len;i++)
         co_printf("send_data[%d]=%x\r\n",i,send_data[i]);
-    
+
     gatt_ntf_t ntf_att;
     ntf_att.att_idx = 8;
     co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
-    ntf_att.conidx = 0; 
-    ntf_att.svc_id = g_att_idx; 
-    ntf_att.data_len = data_len; 
+    ntf_att.conidx = 0;
+    ntf_att.svc_id = g_att_idx;
+    ntf_att.data_len = data_len;
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
 }
 
 
 static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
-{   
+{
     co_printf("%d Read request: len: %d  value: 0x%x 0x%x \r\n", att_idx ,*len, (p_read)[0], (p_read)[*len-1]);
 }
 
@@ -286,7 +271,7 @@ static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
  *
  * @param   write_buf   - the buffer for write
  *                        写操作的数据.
- *                    
+ *
  *          len         - the length of write buffer.
  *                        写缓冲区的长度.
  *          att_idx     - index of the attribute value in it's attribute table.
@@ -327,11 +312,11 @@ static uint16_t govee_sp_gatt_msg_handler(gatt_msg_t *p_msg)
         case GATTC_MSG_READ_REQ:
             sp_gatt_read_cb((uint8_t *)(p_msg->param.msg.p_msg_data), &(p_msg->param.msg.msg_len), p_msg->att_idx);
             break;
-        
+
         case GATTC_MSG_WRITE_REQ:
             sp_gatt_write_cb((uint8_t*)(p_msg->param.msg.p_msg_data), (p_msg->param.msg.msg_len), p_msg->att_idx);
             break;
-            
+
         default:
             break;
     }
@@ -344,8 +329,8 @@ static uint16_t govee_sp_gatt_msg_handler(gatt_msg_t *p_msg)
  * @brief   Simple Profile add GATT service function.
  *          添加GATT service到ATT的数据库里面。
  *
- * @param   None. 
- *        
+ * @param   None.
+ *
  *
  * @return  None.
  */
@@ -355,7 +340,7 @@ void govee_gatt_add_service(void)
     govee_profile_svc.p_att_tb = govee_gatt_profile_att_table;
     govee_profile_svc.att_nb = GOVEE_GATT_IDX_NB;
     govee_profile_svc.gatt_msg_handler = govee_sp_gatt_msg_handler;
-    
+
     govee_sp_svc_id = gatt_add_service(&govee_profile_svc);
 }
 
@@ -364,8 +349,8 @@ void govee_gatt_add_service(void)
  *
  * @brief   Set advertising data & scan response & advertising parameters and start advertising
  *
- * @param   None. 
- *       
+ * @param   None.
+ *
  *
  * @return  None.
  */
@@ -379,9 +364,9 @@ static void sp_start_adv(void)
     adv_param.adv_filt_policy = GAP_ADV_ALLOW_SCAN_ANY_CON_ANY;
     adv_param.adv_intv_min = 300;
     adv_param.adv_intv_max = 300;
-        
+
     gap_set_advertising_param(&adv_param);
-    
+
     // Set advertising data & scan response data
     gap_set_advertising_data(adv_data, adv_data_len);
     gap_set_advertising_rsp_data(scan_rsp_data, scan_rsp_data_len);
@@ -396,7 +381,7 @@ static void sp_start_adv(void)
  * @brief   Application layer GAP event callback function. Handles GAP evnets.
  *
  * @param   p_event - GAP events from BLE stack.
- *       
+ *
  *
  * @return  None.
  */
@@ -410,7 +395,7 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
             //gap_start_advertising(0);
         }
         break;
-        
+
         case GAP_EVT_ALL_SVC_ADDED:
         {
             co_printf("All service added\r\n");
@@ -461,11 +446,11 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
             co_printf("mtu update,conidx=%d,mtu=%d\r\n"
                       ,p_event->param.mtu.conidx,p_event->param.mtu.value);
             break;
-        
+
         case GAP_EVT_LINK_RSSI:
             co_printf("link rssi %d\r\n",p_event->param.link_rssi);
             break;
-                
+
         case GAP_SEC_EVT_SLAVE_ENCRYPT:
             co_printf("slave[%d]_encrypted\r\n",p_event->param.slave_encrypt_conidx);
             break;
@@ -480,7 +465,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
 {
 
     mac_addr_t addr;
-    
+
     if(pt_ble==NULL){
         return -1;
     }
@@ -503,9 +488,9 @@ int32 mid_ble_init(ble_config_t* pt_ble)
         .bond_auth = true,
         .password = 0,
     };
-    
+
     gap_security_param_init(&param);
-    
+
     gap_set_cb_func(govee_gap_evt_cb);
 
     gap_bond_manager_init(BLE_BONDING_INFO_SAVE_ADDR, BLE_REMOTE_SERVICE_SAVE_ADDR, 8, true);
@@ -513,7 +498,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
 
     gap_address_get(&addr);
     co_printf("Local BDADDR: 0x%2X%2X%2X%2X%2X%2X\r\n", addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3], addr.addr[4], addr.addr[5]);
-    
+
     // Adding services to database
     govee_gatt_add_service();
 
