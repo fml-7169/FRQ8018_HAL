@@ -14,7 +14,7 @@ typedef struct
 
 int32 mid_audio_sample_read(int16* buffer, uint32 sample_size);
 int32 mid_audio_sample_size(void);
-int32 mid_audio_init(audio_config_t* pt_audio);
+int32 mid_audio_init(void);
 
 
 #endif /* MIDDLE_AUDIO_H_ */

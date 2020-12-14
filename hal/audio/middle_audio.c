@@ -5,25 +5,42 @@
  *      Author: Weili.Hu
  */
 
+#include <stdint.h>
+#include "os_task.h"
+#include "os_msg_q.h"
+#include "co_printf.h"
+#include "user_task.h"
+#include "libaudio.h"
+#include "driver_plf.h"
+#include "driver_system.h"
+#include "driver_i2s.h"
+#include "driver_pmu.h"
+#include "driver_codec.h"
+#include "driver_uart.h"
+#include "driver_ssp.h"
+#include "driver_frspim.h"
 #include <string.h>
+
 #include "govee_log.h"
 #include "middle_audio.h"
 #include "Lite-Rbuffer.h"
 
+
 #define AUDIO_DATA_BUFFER_SIZE      2048
 
 static LR_handler gt_lr_handler = NULL;
+static int16_t audio_data[I2S_FIFO_DEPTH/2];
 
-static void audio_sample_read_adc(int16* buffer, uint32 size)
+__attribute__((section("ram_code"))) void i2s_isr_ram(void)
 {
-    int32 ret = 0;
-
-    ret = Lite_ring_buffer_write_data(gt_lr_handler, (uint8*)buffer, size*GOVEE_AUDIO_SAMPLE_SIZE);
-    if (ret != 0)
-    {
-        //GOVEE_PRINT(LOG_DEBUG, "Write audio data failed.\r\n");
+    static int total_value = 0;
+    static uint16_t sample_count = 0;
+    if(i2s_get_int_status() & I2S_INT_STATUS_RX_HFULL) {//codec_ADC
+        i2s_get_data(audio_data, I2S_FIFO_DEPTH/2, I2S_DATA_MONO);
+        Lite_ring_buffer_write_data(gt_lr_handler, (uint8*)audio_data, I2S_FIFO_DEPTH);
     }
 }
+
 
 int32 mid_audio_sample_read(int16* buffer, uint32 sample_size)
 {
@@ -32,10 +49,9 @@ int32 mid_audio_sample_read(int16* buffer, uint32 sample_size)
     data_len = Lite_ring_buffer_size_get(gt_lr_handler);
     if (data_len < sample_size*GOVEE_AUDIO_SAMPLE_SIZE)
     {
-        //GOVEE_PRINT(LOG_DEBUG, "audio data is not enough.\r\n");
+        GOVEE_PRINT(LOG_DEBUG, "audio data is not enough.\r\n");
         return -1;
     }
-
     Lite_ring_buffer_read_data(gt_lr_handler, (uint8*)buffer, sample_size*GOVEE_AUDIO_SAMPLE_SIZE);
 
     return 0;
@@ -48,16 +64,23 @@ int32 mid_audio_sample_size(void)
     return data_size / GOVEE_AUDIO_SAMPLE_SIZE;
 }
 
-int32 mid_audio_init(audio_config_t* pt_audio)
+int32 mid_audio_init(void)
 {
+    pmu_set_aldo_voltage(PMU_ALDO_MODE_BYPASS, 0x00);
+    pmu_codec_power_enable();
+    codec_adc_init(CODEC_SAMPLE_RATE_8000);
+    codec_enable_adc();
+    //codec_enable_dac();
+    i2s_init(I2S_DIR_RX,8000,1);
+    i2s_start();
+    NVIC_SetPriority(I2S_IRQn,I2S_IRQ_PRIO);
+    NVIC_EnableIRQ(I2S_IRQn);   
+
     gt_lr_handler = Lite_ring_buffer_init(AUDIO_DATA_BUFFER_SIZE);
     if (gt_lr_handler == NULL)
     {
         GOVEE_PRINT(LOG_ERROR, "Audio ring buffer init failed.\r\n");
         return -1;
     }
-
-    pt_audio->audio_read = audio_sample_read_adc;
-
     return 0;
 }
