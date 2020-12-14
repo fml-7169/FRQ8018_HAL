@@ -10,7 +10,6 @@
 #include "os_msg_q.h"
 #include "co_printf.h"
 #include "user_task.h"
-#include "libaudio.h"
 #include "driver_plf.h"
 #include "driver_system.h"
 #include "driver_i2s.h"
@@ -19,13 +18,14 @@
 #include "driver_uart.h"
 #include "driver_ssp.h"
 #include "driver_frspim.h"
+#include "driver_codec.h"
 #include <string.h>
 
 #include "govee_log.h"
 #include "middle_audio.h"
 #include "Lite-Rbuffer.h"
 
-
+#define I2S_IRQ_PRIO    4
 #define AUDIO_DATA_BUFFER_SIZE      2048
 
 static LR_handler gt_lr_handler = NULL;
