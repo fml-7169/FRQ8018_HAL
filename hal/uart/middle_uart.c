@@ -58,10 +58,10 @@ int32 mid_uart_data_send(uint8* p_data, uint32 size)
  * @fn      uart0_isr_ram
  *
  * @brief   UART0 interruption, when uart0 FIFO received charaters, this ISR will be called
- *          
  *
- * @param   None 
- *           
+ *
+ * @param   None
+ *
  *
  * @return  None
  */
@@ -83,6 +83,7 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
     {
         uart_reg_ram->lsr = uart_reg_ram->lsr;
     }
+
 }
 
 
