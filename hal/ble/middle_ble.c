@@ -260,10 +260,10 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     check_sum = ble_check_sum((uint8*)pt_msg, BLE_PKG_DATA_LEN - 1);
     pt_msg->check_code = check_sum;
 
-    ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
+    ntf_att.att_idx = GOVEE_GATT_IDX_CHAR2_VALUE;
     //co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
     ntf_att.conidx = 0;
-    ntf_att.svc_id = g_att_idx;
+    ntf_att.svc_id = govee_sp_svc_id;
     ntf_att.data_len = data_len;
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
