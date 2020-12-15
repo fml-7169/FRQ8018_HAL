@@ -194,7 +194,7 @@ static int32 ble_msg_write(ble_msg_t* pt_message)
 
 uint8 mid_ble_check_sum(uint8* p_data, uint32 length)
 {
-
+    return ble_check_sum(p_data, length);
 }
 
 int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_msg_t* output)
@@ -240,27 +240,36 @@ int32 mid_ble_msg_read(msg_packet_t* pt_packet)
     data_len = Lite_ring_buffer_size_get(gt_ble_lr);
     if (data_len < sizeof(msg_packet_t))
     {
-        GOVEE_PRINT(LOG_DEBUG, "ble data is not enough.\r\n");
+        //GOVEE_PRINT(LOG_DEBUG, "ble data is not enough.\r\n");
         return -1;
     }
     Lite_ring_buffer_read_data(gt_ble_lr, (uint8*)pt_packet, sizeof(msg_packet_t));
-    return 0;   
+    return 0;
 }
 
 uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
 {
     #if 0
-    for(uint8_t i=0;i<data_len;i++) 
+    for(uint8_t i=0;i<data_len;i++)
         co_printf("send_data[%d]=%x\r\n",i,send_data[i]);
     #endif
     gatt_ntf_t ntf_att;
-    ntf_att.att_idx = 8;
-    co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
+    ble_msg_t* pt_msg = (ble_msg_t*)send_data;
+    uint8 check_sum = 0;
+
+    check_sum = ble_check_sum((uint8*)pt_msg, BLE_PKG_DATA_LEN - 1);
+    pt_msg->check_code = check_sum;
+
+    ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
+    //co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
     ntf_att.conidx = 0;
     ntf_att.svc_id = g_att_idx;
     ntf_att.data_len = data_len;
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
+
+    co_printf("send msg : ");
+    govee_utils_data_print(send_data, data_len, 0);
 }
 
 
@@ -282,6 +291,7 @@ int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
     {
         memcpy(t_message.data, p_data, data_len);
     }
+
     protocolNotify2App((uint8_t *)&t_message,sizeof(ble_msg_t));
     return 1;
 }
@@ -289,7 +299,7 @@ int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
 
 static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
 {
-    co_printf("%d Read request: len: %d  value: 0x%x 0x%x \r\n", att_idx ,*len, (p_read)[0], (p_read)[*len-1]);
+    //co_printf("%d Read request: len: %d  value: 0x%x 0x%x \r\n", att_idx ,*len, (p_read)[0], (p_read)[*len-1]);
 }
 
 /*********************************************************************
@@ -308,13 +318,13 @@ static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
  *
  * @return  写请求的长度.
  */
-static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)        // 
+static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)        //
 {
     g_att_idx = att_idx;
-    co_printf(" %d Write request: len: %d, 0x%x \r\n",att_idx, len);
+    //co_printf(" %d Write request: len: %d, 0x%x \r\n",att_idx, len);
     uint16_t i = 0;
     for(i=0;i<len;i++){
-        co_printf(" 0x%x\t",write_buf[i]);
+        //co_printf(" 0x%x\t",write_buf[i]);
     }
     msg_packet_t ble_msg;
     memset(&ble_msg, 0, sizeof(msg_packet_t));
