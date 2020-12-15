@@ -207,16 +207,6 @@ uint8 mid_ble_check_sum(uint8* p_data, uint32 length)
 
 }
 
-int32 mid_ble_msg_read(msg_packet_t* pt_packet)
-{
-
-}
-
-int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
-{
-
-}
-
 int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_msg_t* output)
 {
 
@@ -257,11 +247,27 @@ int32 mid_ble_config_update(uint8* ble_mac)
  * @return  读请求的长度.
  */
 
+
+int32 mid_ble_msg_read(msg_packet_t* pt_packet)
+{
+    int32 data_len = 0;
+
+    data_len = Lite_ring_buffer_size_get(gt_ble_lr);
+    if (data_len < sizeof(msg_packet_t))
+    {
+        GOVEE_PRINT(LOG_DEBUG, "ble data is not enough.\r\n");
+        return -1;
+    }
+    Lite_ring_buffer_read_data(gt_ble_lr, (uint8*)pt_packet, sizeof(msg_packet_t));
+    return 0;   
+}
+
 uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
 {
+    #if 0
     for(uint8_t i=0;i<data_len;i++) 
         co_printf("send_data[%d]=%x\r\n",i,send_data[i]);
-    
+    #endif
     gatt_ntf_t ntf_att;
     ntf_att.att_idx = 8;
     co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
@@ -270,6 +276,29 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     ntf_att.data_len = data_len; 
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
+}
+
+
+int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
+{
+    ble_msg_t t_message;
+
+    if (data_len > BLE_MSG_DATA_LEN)
+    {
+        GOVEE_PRINT(LOG_ERROR, "BLE write data too long.\r\n");
+        return -1;
+    }
+
+    memset(&t_message, 0, sizeof(ble_msg_t));
+    t_message.head = head;
+    t_message.type = type;
+
+    if (p_data && data_len > 0)
+    {
+        memcpy(t_message.data, p_data, data_len);
+    }
+    protocolNotify2App((uint8_t *)&t_message,sizeof(ble_msg_t));
+    return 1;
 }
 
 
@@ -294,7 +323,7 @@ static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
  *
  * @return  写请求的长度.
  */
-static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)
+static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)        // 
 {
     g_att_idx = att_idx;
     co_printf(" %d Write request: len: %d, 0x%x \r\n",att_idx, len);
@@ -331,7 +360,6 @@ static uint16_t govee_sp_gatt_msg_handler(gatt_msg_t *p_msg)
         case GATTC_MSG_WRITE_REQ:
             sp_gatt_write_cb((uint8_t*)(p_msg->param.msg.p_msg_data), (p_msg->param.msg.msg_len), p_msg->att_idx);
             break;
-            
         default:
             break;
     }
@@ -541,5 +569,10 @@ int32 mid_ble_mac_get(uint8* ble_mac)
 int32 mid_ble_event_get(void)
 {
     return (int32)gap_get_connect_status(0);
+}
+
+void mid_ble_ota_init(void)
+{
+    ota_gatt_add_service();
 }
 
