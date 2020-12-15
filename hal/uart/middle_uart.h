@@ -10,18 +10,7 @@
 
 #include "hal_types.h"
 
-
-#define UART_COMMAND_LINE_ENABLE        1
-
-
-#if UART_COMMAND_LINE_ENABLE
-#define UART_COMMAND_MAX_LEN            32
-#define UART_COMMAND_MAX_PARAM          6
-#define UART_RX_BUFFER_SIZE             128
-#else
 #define UART_RX_BUFFER_SIZE             512
-#define UART_DATA_TEST                  0
-#endif
 
 typedef void (*uart_callback)(uint8* p_data, uint32 size);
 
