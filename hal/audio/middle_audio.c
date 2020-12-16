@@ -28,8 +28,13 @@
 #define I2S_IRQ_PRIO    4
 #define AUDIO_DATA_BUFFER_SIZE      2048
 
+#define codec_write(addr, data)         frspim_wr(FR_SPI_CODEC_CHAN, addr, 1, (uint32_t)data)
+
 static LR_handler gt_lr_handler = NULL;
 static int16_t audio_data[I2S_FIFO_DEPTH/2];
+
+static int gGain;
+static int gMaxGain_sensitive = 0x2F;
 
 __attribute__((section("ram_code"))) void i2s_isr_ram(void)
 {
@@ -76,6 +81,7 @@ int32 mid_audio_init(void)
     NVIC_SetPriority(I2S_IRQn,I2S_IRQ_PRIO);
     NVIC_EnableIRQ(I2S_IRQn);   
 
+    audio_sensitivity(100);
     gt_lr_handler = Lite_ring_buffer_init(AUDIO_DATA_BUFFER_SIZE);
     if (gt_lr_handler == NULL)
     {
@@ -84,3 +90,11 @@ int32 mid_audio_init(void)
     }
     return 0;
 }
+
+void audio_sensitivity(int level){
+    if(level > 100)level = 100;
+    gMaxGain_sensitive = level*47/100;
+    gGain = gMaxGain_sensitive;
+    codec_write(0x19, (unsigned char)gGain);
+}
+
