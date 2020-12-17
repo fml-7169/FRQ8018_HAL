@@ -199,12 +199,38 @@ uint8 mid_ble_check_sum(uint8* p_data, uint32 length)
 
 int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_msg_t* output)
 {
+    uint8 check_sum = 0;
 
+    memset(output, 0, sizeof(ble_msg_t));
+    output->head = head;
+    output->type = type;
+
+    if (p_data && size > 0)
+    {
+        memcpy(output->data, p_data, size);
+    }
+
+    check_sum = ble_check_sum((uint8*)output, BLE_PKG_DATA_LEN - 1);
+    output->check_code = check_sum;
+
+    return 0;
 }
 
 int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prority)
 {
+    msg_packet_t ble_msg;
 
+    if (NULL == p_data || data_len != BLE_PKG_DATA_LEN)
+    {
+        GOVEE_PRINT(LOG_ERROR, "BLE read data invalid.\r\n");
+        return 0;
+    }
+
+    memset(&ble_msg, 0, sizeof(msg_packet_t));
+    ble_msg.t_header.source = source;
+    memcpy(&ble_msg.t_message, p_data, data_len);
+    Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&ble_msg, sizeof(msg_packet_t));
+    return 0;
 }
 
 
@@ -297,6 +323,16 @@ int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
 }
 
 
+int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_msg_t* output)
+{
+
+
+}
+int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prority)
+{
+
+
+}
 static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
 {
     //co_printf("%d Read request: len: %d  value: 0x%x 0x%x \r\n", att_idx ,*len, (p_read)[0], (p_read)[*len-1]);
