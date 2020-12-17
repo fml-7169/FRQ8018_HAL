@@ -65,6 +65,9 @@ int32 mid_ble_mac_get(uint8* ble_mac);
 int32 mid_ble_msg_read(msg_packet_t* pt_packet);
 int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len);
 
+int32 mid_ble_msg_pack(uint8 head, uint8 type, uint8* p_data, uint32 size, ble_msg_t* output);
+int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prority);
+
 int32 mid_ble_event_get(void);
 int32 mid_ble_init(ble_config_t* pt_ble);
 void mid_ble_ota_init(void);
