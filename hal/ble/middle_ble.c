@@ -268,8 +268,8 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
 
-    co_printf("send msg : ");
-    govee_utils_data_print(send_data, data_len, 0);
+    //co_printf("send msg : ");
+    //govee_utils_data_print(send_data, data_len, 0);
 }
 
 

@@ -79,7 +79,7 @@ int32 mid_audio_init(void)
     i2s_init(I2S_DIR_RX,8000,1);
     i2s_start();
     NVIC_SetPriority(I2S_IRQn,I2S_IRQ_PRIO);
-    NVIC_EnableIRQ(I2S_IRQn);   
+    NVIC_EnableIRQ(I2S_IRQn);
 
     audio_sensitivity(100);
     gt_lr_handler = Lite_ring_buffer_init(AUDIO_DATA_BUFFER_SIZE);
@@ -93,7 +93,7 @@ int32 mid_audio_init(void)
 
 void audio_sensitivity(int level){
     if(level > 100)level = 100;
-    gMaxGain_sensitive = level*47/100;
+    gMaxGain_sensitive = level*0x25/100;
     gGain = gMaxGain_sensitive;
     codec_write(0x19, (unsigned char)gGain);
 }
