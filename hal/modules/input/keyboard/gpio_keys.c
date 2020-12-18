@@ -216,7 +216,19 @@ static void gpio_keys_shake_timer(void *_pdata)
     }
     return;
 }
-
+static unsigned int gpio_keys_read(void *data,int id){
+    int i=0;    
+    struct key_device_t *dev=(struct key_device_t *)data;
+    if(dev == NULL){
+        DEV_ERR("keys read  is null\r\n");
+        return 0;
+    }
+    for(i=0;i<dev->n_buttons;i++){
+        if(id == dev->button[i].event)
+            break;
+    }
+    return (ool_read32(PMU_REG_GPIOA_V)&dev->button[i].gpio?1:0);    
+}
 void button_toggle_detected(uint32_t curr_button)
 {
 //    DEV_DEBUG("curr_button is 0x%x\r\n",curr_button);
@@ -303,6 +315,7 @@ static int gpio_keys_open(const struct hw_module_t* module, char const* name,
     dev->common.close = (int (*)(struct hw_device_t*))gpio_keys_close;
     dev->key_pin_config=gpio_keys_pin_config;
     dev->key_report_init=gpio_keys_report_init;
+    dev->read=gpio_keys_read;
     keys_set_drvdata(dev);
     *device = (struct hw_device_t*)dev;
     return 0;

@@ -32,26 +32,6 @@ co_printf(format,##__VA_ARGS__); \
     co_printf(format,##__VA_ARGS__); \
     } while(0)
 
-//static inline void adc_convert(struct adc_client *adc)
-//{
-
-//}
-
-//static inline void adc_select(struct adc_client *adc,
-//				  struct adc_client *client)
-//{
-
-//}
-//static void convert_done(struct adc_client *client,
-//               unsigned v, unsigned u, unsigned *left)
-//{
-
-//}
-//static void adc_default_select(struct adc_client *client,
-//				   unsigned select)
-//{
-//}
-
 int adc_start(struct adc_client *client)
 {
     if(client == NULL){

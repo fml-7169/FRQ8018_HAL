@@ -128,47 +128,9 @@ static int set_speaker_light(struct light_device_t* dev,
     switch (state->flashMode) {
         case LIGHT_FLASH_TIMED:
         case LIGHT_FLASH_HARDWARE:
-            if (colorR) {
-                write_int(&leds[RED_LED].flash_on_ms, state->flashOnMS);
-                write_int(&leds[RED_LED].flash_off_ms, state->flashOffMS);
-            } else {  /*off*/
-                write_int(&leds[RED_LED].flash_on_ms, 0);
-            }
-            if (colorG) {
-                write_int(&leds[GREEN_LED].flash_on_ms, state->flashOnMS);
-                write_int(&leds[GREEN_LED].flash_off_ms, state->flashOffMS);
-            } else {  /*off*/
-                write_int(&leds[GREEN_LED].flash_on_ms, 0);
-            }
-            if (colorB) {
-                write_int(&leds[BLUE_LED].flash_on_ms, state->flashOnMS);
-                write_int(&leds[BLUE_LED].flash_off_ms, state->flashOffMS);
-            } else {  /*off*/
-                write_int(&leds[BLUE_LED].flash_on_ms, 0);
-            }
             break;
- 
         case LIGHT_FLASH_NONE:
-            if (colorR) {
-                write_int(&leds[RED_LED].flash_on_ms, 255);
-                write_int(&leds[RED_LED].flash_off_ms, 0);
-            } else {  /*off*/
-                write_int(&leds[RED_LED].flash_on_ms, 0);
-            }
-            if (colorG) {
-                write_int(&leds[GREEN_LED].flash_on_ms, 255);
-                write_int(&leds[GREEN_LED].flash_off_ms, 0);
-            } else {  /*off*/
-                write_int(&leds[GREEN_LED].flash_on_ms, 0);
-            }
-            if (colorB) {
-                write_int(&leds[BLUE_LED].flash_on_ms, 255);
-                write_int(&leds[BLUE_LED].flash_off_ms, 0);
-            } else {  /*off*/
-                write_int(&leds[BLUE_LED].flash_on_ms, 0);
-            }
             break;
- 
         default:
             LOGE("set_led_state colorRGB=%08X, unknown mode %d\n",
                   colorRGB, state->flashMode);
@@ -186,12 +148,7 @@ static int rgb_to_brightness(struct light_state_t const* state)
 static int set_light_buttons(struct light_device_t* dev,
         struct light_state_t const* state)
 {
-    int err = 0;
-    int brightness = rgb_to_brightness(state);
-    LOGE("%s brightness=%d color=0x%08x",
-            __FUNCTION__, brightness, state->color);
-    err = write_int(&leds[BUTTONS_LED].brightness, brightness);
-	return err;
+	return 0;
 }
 // 设置lcd背光亮度
 static int set_light_backlight(struct light_device_t* dev,
