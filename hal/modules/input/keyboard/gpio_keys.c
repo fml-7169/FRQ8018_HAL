@@ -8,7 +8,7 @@
 #include "hal_config.h"
 #include "gpio.h"
 #include "driver_pmu.h"
-
+#if 0
 #define DEV_ERR(format,...) do { \
 co_printf("[KEYS] error:"); \
 co_printf(format,##__VA_ARGS__); \
@@ -17,7 +17,10 @@ co_printf(format,##__VA_ARGS__); \
     co_printf("[KEYS] debug:"); \
     co_printf(format,##__VA_ARGS__); \
 } while(0)
-
+#else
+#define DEV_ERR(format,...)
+#define DEV_DEBUG(format,...)
+#endif
 #define KEYS_SET_FAIL -1
 #define KEYS_SUC 0
 

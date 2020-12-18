@@ -26,14 +26,19 @@
 #include "gpio.h"
 
 #define ACQ_RANGE   (1<<10)
+#if 0
 #define DEV_ERR(format,...) do { \
 co_printf("[ADC] error:"); \
 co_printf(format,##__VA_ARGS__); \
 } while(0)
 #define DEV_DB(format,...) do { \
-    co_printf("[ADC] debug:"); \
-    co_printf(format,##__VA_ARGS__); \
-    } while(0)
+co_printf("[ADC] debug:"); \
+co_printf(format,##__VA_ARGS__); \
+} while(0)
+#else
+#define DEV_ERR(format,...)
+#define DEV_DB(format,...)
+#endif
 
 int adc_start(struct adc_client *client)
 {

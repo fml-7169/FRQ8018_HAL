@@ -28,6 +28,7 @@
 #include "hal_bz.h"
 #include "hal_config.h"
 #include "gpio.h"
+#if 0
 #define DEV_ERR(format,...) do { \
 co_printf("[BUZZER] error:"); \
 co_printf(format,##__VA_ARGS__); \
@@ -37,6 +38,10 @@ co_printf(format,##__VA_ARGS__); \
     co_printf(format,##__VA_ARGS__); \
     } while(0)
 
+#else
+#define DEV_ERR(format,...)
+#define DEV_DB(format,...)
+#endif
 
 int buzzer_start(struct bz_device_t *dev,\
                         int channel,\
