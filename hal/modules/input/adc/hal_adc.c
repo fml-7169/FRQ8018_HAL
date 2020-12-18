@@ -88,9 +88,11 @@ static int adc_read(struct adc_client *client, unsigned int ch)
     }
 	//ret = adc_start(client);
 	if(client->channel &ch){
+		
 	    adc_get_result(ADC_TRANS_SOURCE_PAD, ch, &adc_value);
         client->result=adc_value*client->ref/ACQ_RANGE;
         DEV_DB("adc result %d,ref %d,acq range %d\r\n",client->result,client->ref,ACQ_RANGE);
+		
 	}
     else{        
         DEV_ERR("no channel had be match\r\n");
