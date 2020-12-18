@@ -22,6 +22,8 @@
 #include "driver_gpio.h"
 #include "co_math.h"
 
+#include "driver_flash.h"
+
 #define APP_BRIDGE_UUID_OFFSET_ADDR     0x400
 
 uint32 app_bridge_free_mem_get(void)
@@ -41,10 +43,6 @@ void app_bridge_os_delay_ms(uint32 count)
 
 int32 app_bridge_gatt_write_data(uint8* p_data, uint32 length)
 {
-    if (LEconnection_LE_Connected())
-    {
-        //return GATTserver_Characteristic_Write_Local_Value(user_define_notify_handle_tx, length, p_data);
-    }
     return 0;
 }
 
@@ -66,7 +64,7 @@ void app_bridge_pwm_init(uint8 PWMindex, uint8 enableWork, uint16 PWMperiod, uin
     gpio_set_dir(GPIO_PORT_A,GPIO_BIT_4,true);
     pwm_init(PWM_CHANNEL_4,20000,80);
     //pwm_update
-    pwm_start(PWM_CHANNEL_4); 
+    pwm_start(PWM_CHANNEL_4);
     pwm_update(PWM_CHANNEL_4,20000,99);     // R G B
 }
 
@@ -128,7 +126,7 @@ int32 app_bridge_ble_mac_get(uint8* ble_mac)
     return 0;
 }
 
-void app_bridge_gpio_config(int index, int dir)      // 0-7 bit          8-11 port  
+void app_bridge_gpio_config(int index, int dir)      // 0-7 bit          8-11 port
 {
     gpio_set_dir(((index>>8)&0x03),(index&0xff),dir);
 }
@@ -138,7 +136,7 @@ void app_bridge_gpio_output(int index, uint32 val)      //
     gpio_set_pin_value(((index>>8)&0x03),(index&0xff),val);
 }
 
-uint32 app_bridge_gpio_input(int index)         // 0-7 bit          8-11 port  
+uint32 app_bridge_gpio_input(int index)         // 0-7 bit          8-11 port
 {
     return (uint32)gpio_get_pin_value(((index>>8)&0x03),(index&0xff));
 }

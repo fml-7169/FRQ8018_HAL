@@ -22,7 +22,6 @@ struct gpio_keys_button {
 typedef struct gpio_keys_report{
     keys_report_func_t report_func_cb;
 }gpio_keys_report;
-
 typedef struct key_device_t {
     struct hw_device_t common;    
 	unsigned int n_buttons;
@@ -30,6 +29,7 @@ typedef struct key_device_t {
     void *timer_list;  //timer_list from n_buttons
 	struct work_struct work;    
 	unsigned int anti_shake_mask;    
+    unsigned int (*read)(void *,int id);
     void (*key_pin_config)(void *pin_map,int pin_map_len,void* device);
     int (*key_report_init)(keys_report_func_t keys_report_func);  //get calllback from native
     gpio_keys_report keys_report;

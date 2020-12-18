@@ -64,31 +64,7 @@ enum {
     BUTTONS_LED,
     NUM_LEDS,
 };
-// 操作各light的节点
-struct led leds[NUM_LEDS] = {
-    [RED_LED] = {
-        .brightness = { "/sys/class/leds/red/brightness", -1},
-        .flash_on_ms = { "/sys/class/leds/red/delay_on", -1},
-        .flash_off_ms = { "/sys/class/leds/red/delay_off", -1},
-    },
-    [GREEN_LED] = {
-        .brightness = { "/sys/class/leds/green/brightness", -1},
-        .flash_on_ms = { "/sys/class/leds/green/delay_on", -1},
-        .flash_off_ms = { "/sys/class/leds/green/delay_off", -1},
-    },
-    [BLUE_LED] = {
-        .brightness = { "/sys/class/leds/blue/brightness", -1},
-        .flash_on_ms = { "/sys/class/leds/blue/delay_on", -1},
-        .flash_off_ms = { "/sys/class/leds/blue/delay_off", -1},
-    },
-    [LCD_BACKLIGHT] = {
-        .brightness = { "/sys/class/backlight/backlight/brightness", -1},
-    },
-    [BUTTONS_LED] = {
-        .brightness = {"/sys/class/leds/button-backlight/brightness", -1},
-    },
-};
- 
+
 static int is_battery_light_on = 0;
 /**
  * device methods
@@ -152,47 +128,9 @@ static int set_speaker_light(struct light_device_t* dev,
     switch (state->flashMode) {
         case LIGHT_FLASH_TIMED:
         case LIGHT_FLASH_HARDWARE:
-            if (colorR) {
-                write_int(&leds[RED_LED].flash_on_ms, state->flashOnMS);
-                write_int(&leds[RED_LED].flash_off_ms, state->flashOffMS);
-            } else {  /*off*/
-                write_int(&leds[RED_LED].flash_on_ms, 0);
-            }
-            if (colorG) {
-                write_int(&leds[GREEN_LED].flash_on_ms, state->flashOnMS);
-                write_int(&leds[GREEN_LED].flash_off_ms, state->flashOffMS);
-            } else {  /*off*/
-                write_int(&leds[GREEN_LED].flash_on_ms, 0);
-            }
-            if (colorB) {
-                write_int(&leds[BLUE_LED].flash_on_ms, state->flashOnMS);
-                write_int(&leds[BLUE_LED].flash_off_ms, state->flashOffMS);
-            } else {  /*off*/
-                write_int(&leds[BLUE_LED].flash_on_ms, 0);
-            }
             break;
- 
         case LIGHT_FLASH_NONE:
-            if (colorR) {
-                write_int(&leds[RED_LED].flash_on_ms, 255);
-                write_int(&leds[RED_LED].flash_off_ms, 0);
-            } else {  /*off*/
-                write_int(&leds[RED_LED].flash_on_ms, 0);
-            }
-            if (colorG) {
-                write_int(&leds[GREEN_LED].flash_on_ms, 255);
-                write_int(&leds[GREEN_LED].flash_off_ms, 0);
-            } else {  /*off*/
-                write_int(&leds[GREEN_LED].flash_on_ms, 0);
-            }
-            if (colorB) {
-                write_int(&leds[BLUE_LED].flash_on_ms, 255);
-                write_int(&leds[BLUE_LED].flash_off_ms, 0);
-            } else {  /*off*/
-                write_int(&leds[BLUE_LED].flash_on_ms, 0);
-            }
             break;
- 
         default:
             LOGE("set_led_state colorRGB=%08X, unknown mode %d\n",
                   colorRGB, state->flashMode);
@@ -210,12 +148,7 @@ static int rgb_to_brightness(struct light_state_t const* state)
 static int set_light_buttons(struct light_device_t* dev,
         struct light_state_t const* state)
 {
-    int err = 0;
-    int brightness = rgb_to_brightness(state);
-    LOGE("%s brightness=%d color=0x%08x",
-            __FUNCTION__, brightness, state->color);
-    err = write_int(&leds[BUTTONS_LED].brightness, brightness);
-	return err;
+	return 0;
 }
 // 设置lcd背光亮度
 static int set_light_backlight(struct light_device_t* dev,
@@ -232,6 +165,23 @@ static int set_light_backlight(struct light_device_t* dev,
     }
     return 0;
 }
+
+// 设置lcd背光亮度
+static int set_light_rgbww(struct light_device_t* dev,
+        struct light_state_t const* state)
+{
+    if(dev == NULL || state == NULL)
+        return -1;
+    if(!state->color){ //off
+        pmu_set_gpio_value(dev->plight_portPin_map->GPIOx,\
+                        BIT(dev->plight_portPin_map->GPIO_Pin_x), 0);
+    }else{ //on
+        pmu_set_gpio_value(dev->plight_portPin_map->GPIOx,\
+                        BIT(dev->plight_portPin_map->GPIO_Pin_x), 1);
+    }
+    return 0;
+}
+
 // 设置低电light
 static int set_light_battery(struct light_device_t* dev,
         struct light_state_t const* state)
@@ -296,6 +246,35 @@ static int init_light_backlight(struct light_device_t *dev,light_portPin_map *pp
         }
     }
 }
+
+static int init_light_rgbww(struct light_device_t *dev,light_portPin_map *pportPin_map,int map_count)
+{
+    int i=0;
+    if(dev ==NULL || pportPin_map == NULL){
+        return -1;
+    }
+    LOGD("name is %s,gpiox is 0x%x,gpio_pin is 0x%x\r\n",pportPin_map[0].name,\
+                                                        pportPin_map[0].GPIOx,\
+                                                        pportPin_map[0].GPIO_Pin_x);
+    dev->plight_portPin_map=os_calloc(1, sizeof(light_portPin_map));
+    for(i=0;i<map_count;i++){
+        if (0 == strcmp(LIGHT_ID_BACKLIGHT, pportPin_map[i].name)) {
+            dev->plight_portPin_map->GPIOx=pportPin_map[i].GPIOx;            
+            dev->plight_portPin_map->GPIO_Pin_x=pportPin_map[i].GPIO_Pin_x;
+            pmu_set_port_mux(dev->plight_portPin_map->GPIOx,\
+                            dev->plight_portPin_map->GPIO_Pin_x,\
+                            PMU_PORT_MUX_GPIO);
+            pmu_set_pin_to_PMU(dev->plight_portPin_map->GPIOx,\
+                            BIT(dev->plight_portPin_map->GPIO_Pin_x) );
+            pmu_set_pin_dir(dev->plight_portPin_map->GPIOx,\
+                            BIT(dev->plight_portPin_map->GPIO_Pin_x), \
+                            GPIO_DIR_OUT);  
+            
+            LOGD("gpiox is 0x%x,gpio_pin is 0x%x\r\n",dev->plight_portPin_map->GPIOx,\
+                                                    dev->plight_portPin_map->GPIO_Pin_x);
+        }
+    }
+}
 // 关闭light
 static int close_lights(struct light_device_t *dev)
 {
@@ -328,6 +307,10 @@ static int open_lights(const struct hw_module_t* module, char const* name,
     }
     else if (0 == strcmp(LIGHT_ID_ATTENTION, name)) {
         set_light = set_light_attention;
+    }
+    else if (0 == strcmp(LIGHT_ID_RGBWW, name)) {
+        set_light = set_light_rgbww;
+        init_light= init_light_rgbww;
     }
     else {
         LOGE("name %s\n", name);

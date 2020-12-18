@@ -41,6 +41,7 @@
 #define LIGHT_ID_BATTERY            "battery"
 #define LIGHT_ID_NOTIFICATIONS      "notifications"
 #define LIGHT_ID_ATTENTION          "attention"
+#define LIGHT_ID_RGBWW              "RGBWW"
 
 /*
  * These lights aren't currently supported by the higher
