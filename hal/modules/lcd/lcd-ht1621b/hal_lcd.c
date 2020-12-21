@@ -11,7 +11,7 @@
 #include "driver_gpio.h"
 #include "hal_lcd.h"
 
-
+#if 0
 #define DEV_ERR(format,...) do { \
 co_printf("[LCD] error:"); \
 co_printf(format,##__VA_ARGS__); \
@@ -20,7 +20,10 @@ co_printf(format,##__VA_ARGS__); \
     co_printf("[LCD] debug:"); \
     co_printf(format,##__VA_ARGS__); \
 } while(0)
-
+#else
+    #define DEV_ERR(format,...)    
+    #define DEV_DEBUG(format,...)
+#endif
 /* A local copy of a pointer to an lcd_TypeDef instance passed from user app.
  * This copy is used by internal calls to low-level functions. The advantage
  * is that we dont have to pass around the pointer to the lcd_TypeDef within
