@@ -439,32 +439,43 @@ static void lcd_tem_unit(int pos,int unit){
     switch(pos){
         case 0:{
             lcd_set_seg(HT_S6_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S8_LCD);
                 lcd_set_seg(HT_S7_LCD);
-            else    ////temerature unit F
+            }else{    ////temerature unit F
+                lcd_clear_seg(HT_S7_LCD);
                 lcd_set_seg(HT_S8_LCD);
+            }
         }break;
         case 1:{
             lcd_set_seg(HT_S11_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S13_LCD);
                 lcd_set_seg(HT_S12_LCD);
-            else    ////temerature unit F
-                lcd_set_seg(HT_S13_LCD);
+            }else{    ////temerature unit F
+                lcd_set_seg(HT_S13_LCD);                
+                lcd_clear_seg(HT_S12_LCD);
+            }
         }break;
         case 2:{
             lcd_set_seg(HT_S18_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S20_LCD);
                 lcd_set_seg(HT_S19_LCD);
-            else    ////temerature unit F
+            }else{    ////temerature unit F             
+                lcd_clear_seg(HT_S19_LCD);
                 lcd_set_seg(HT_S20_LCD);
-
+            }
         }break;
         case 3:{
             lcd_set_seg(HT_S23_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S25_LCD);
                 lcd_set_seg(HT_S24_LCD);
-            else    ////temerature unit F
-                lcd_set_seg(HT_S25_LCD);
+            }else{    ////temerature unit F
+                lcd_set_seg(HT_S25_LCD);                
+                lcd_clear_seg(HT_S24_LCD);
+            }
         }break;
         default:{}break;
     }
