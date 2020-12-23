@@ -428,6 +428,7 @@ static void sp_start_adv(void)
     // Set advertising parameters
     gap_adv_param_t adv_param;
     adv_param.adv_mode = GAP_ADV_MODE_UNDIRECT;
+    adv_param.disc_mode = GAP_ADV_DISC_MODE_GEN_DISC;
     adv_param.adv_addr_type = GAP_ADDR_TYPE_PUBLIC;
     adv_param.adv_chnl_map = GAP_ADV_CHAN_ALL;
     adv_param.adv_filt_policy = GAP_ADV_ALLOW_SCAN_ANY_CON_ANY;
@@ -442,6 +443,8 @@ static void sp_start_adv(void)
     // Start advertising
     co_printf("Start advertising...\r\n");
     gap_start_advertising(0);
+
+    co_printf("~~~~ >> %d\r\n", adv_param.disc_mode);
 }
 
 /*********************************************************************
