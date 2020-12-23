@@ -15,6 +15,9 @@
  
 #include <string.h>
 #include "driver_adc.h"
+#include "driver_iomux.h"
+#include "driver_system.h"
+#include "driver_gpio.h"
 #include "os_mem.h"
 #include "co_printf.h"
 
@@ -23,14 +26,19 @@
 #include "gpio.h"
 
 #define ACQ_RANGE   (1<<10)
+#if 0
 #define DEV_ERR(format,...) do { \
 co_printf("[ADC] error:"); \
 co_printf(format,##__VA_ARGS__); \
 } while(0)
 #define DEV_DB(format,...) do { \
-    co_printf("[ADC] debug:"); \
-    co_printf(format,##__VA_ARGS__); \
-    } while(0)
+co_printf("[ADC] debug:"); \
+co_printf(format,##__VA_ARGS__); \
+} while(0)
+#else
+#define DEV_ERR(format,...)
+#define DEV_DB(format,...)
+#endif
 
 int adc_start(struct adc_client *client)
 {
@@ -58,6 +66,8 @@ int adc_start(struct adc_client *client)
 static void adc_stop(struct adc_client *client){
     adc_disable();
 }
+
+#define PORT_FUNC_GPIO              0x00
 static int adc_read(struct adc_client *client, unsigned int ch)
 {
 	int ret=-1;
@@ -68,9 +78,18 @@ static int adc_read(struct adc_client *client, unsigned int ch)
     }
 	//ret = adc_start(client);
 	if(client->channel &ch){
+        if(ch == 0x8){
+            system_set_port_mux(GPIO_PORT_D,GPIO_BIT_1,PORT_FUNC_GPIO);
+            gpio_set_dir(GPIO_PORT_D,GPIO_BIT_1,GPIO_DIR_OUT);
+            gpio_set_pin_value(GPIO_PORT_D,GPIO_BIT_1,1);            
+            co_delay_100us(50);
+        }        
 	    adc_get_result(ADC_TRANS_SOURCE_PAD, ch, &adc_value);
+        if(ch == 0x8){
+            gpio_set_pin_value(GPIO_PORT_D,GPIO_BIT_1,0);
+        }
         client->result=adc_value*client->ref/ACQ_RANGE;
-        DEV_DB("adc result %d,ref %d,acq range %d\r\n",client->result,client->ref,ACQ_RANGE);
+        DEV_DB("adc channel[%d] result %d,ref %d,acq range %d\r\n",ch,client->result,client->ref,ACQ_RANGE);
 	}
     else{        
         DEV_ERR("no channel had be match\r\n");
@@ -98,7 +117,6 @@ void adc_pin_config(void *pin_map,int pin_map_len,void *device)
     struct adc_device_t *dev = (struct adc_device_t *)device;
     struct adc_config_stuct* adc_map=(struct adc_config_stuct*)pin_map;
     int pin_count=pin_map_len/sizeof(struct adc_config_stuct);    
-    DEV_ERR("start pin count is %d\r\n",pin_count);
     int i=0;
     for(i=0;i<pin_count;i++){        
         DEV_DB("adc[%d] index %d,channel %d,sample %d\r\n",i,adc_map[i].adc_index,adc_map[i].channel,adc_map[i].sample);

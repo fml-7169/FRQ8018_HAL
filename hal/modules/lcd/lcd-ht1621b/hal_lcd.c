@@ -11,7 +11,7 @@
 #include "driver_gpio.h"
 #include "hal_lcd.h"
 
-
+#if 0
 #define DEV_ERR(format,...) do { \
 co_printf("[LCD] error:"); \
 co_printf(format,##__VA_ARGS__); \
@@ -20,7 +20,10 @@ co_printf(format,##__VA_ARGS__); \
     co_printf("[LCD] debug:"); \
     co_printf(format,##__VA_ARGS__); \
 } while(0)
-
+#else
+    #define DEV_ERR(format,...)    
+    #define DEV_DEBUG(format,...)
+#endif
 /* A local copy of a pointer to an lcd_TypeDef instance passed from user app.
  * This copy is used by internal calls to low-level functions. The advantage
  * is that we dont have to pass around the pointer to the lcd_TypeDef within
@@ -436,32 +439,43 @@ static void lcd_tem_unit(int pos,int unit){
     switch(pos){
         case 0:{
             lcd_set_seg(HT_S6_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S8_LCD);
                 lcd_set_seg(HT_S7_LCD);
-            else    ////temerature unit F
+            }else{    ////temerature unit F
+                lcd_clear_seg(HT_S7_LCD);
                 lcd_set_seg(HT_S8_LCD);
+            }
         }break;
         case 1:{
             lcd_set_seg(HT_S11_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S13_LCD);
                 lcd_set_seg(HT_S12_LCD);
-            else    ////temerature unit F
-                lcd_set_seg(HT_S13_LCD);
+            }else{    ////temerature unit F
+                lcd_set_seg(HT_S13_LCD);                
+                lcd_clear_seg(HT_S12_LCD);
+            }
         }break;
         case 2:{
             lcd_set_seg(HT_S18_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S20_LCD);
                 lcd_set_seg(HT_S19_LCD);
-            else    ////temerature unit F
+            }else{    ////temerature unit F             
+                lcd_clear_seg(HT_S19_LCD);
                 lcd_set_seg(HT_S20_LCD);
-
+            }
         }break;
         case 3:{
             lcd_set_seg(HT_S23_LCD);
-            if(unit ==true) //temerature unit c
+            if(unit ==true){ //temerature unit c            
+                lcd_clear_seg(HT_S25_LCD);
                 lcd_set_seg(HT_S24_LCD);
-            else    ////temerature unit F
-                lcd_set_seg(HT_S25_LCD);
+            }else{    ////temerature unit F
+                lcd_set_seg(HT_S25_LCD);                
+                lcd_clear_seg(HT_S24_LCD);
+            }
         }break;
         default:{}break;
     }
