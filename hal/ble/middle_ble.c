@@ -443,8 +443,6 @@ static void sp_start_adv(void)
     // Start advertising
     co_printf("Start advertising...\r\n");
     gap_start_advertising(0);
-
-    co_printf("~~~~ >> %d\r\n", adv_param.disc_mode);
 }
 
 /*********************************************************************
