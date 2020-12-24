@@ -119,7 +119,7 @@ void adc_pin_config(void *pin_map,int pin_map_len,void *device)
     int pin_count=pin_map_len/sizeof(struct adc_config_stuct);    
     int i=0;
     for(i=0;i<pin_count;i++){        
-        DEV_DB("adc[%d] index %d,channel %d,sample %d\r\n",i,adc_map[i].adc_index,adc_map[i].channel,adc_map[i].sample);
+        //DEV_DB("adc[%d] index %d,channel %d,sample %d\r\n",i,adc_map[i].adc_index,adc_map[i].channel,adc_map[i].sample);
         gpio_adc(adc_map[i].adc_index);        
         dev->cli.channel |=adc_map[i].channel;        
         dev->cli.nr_samples=adc_map[i].sample;
