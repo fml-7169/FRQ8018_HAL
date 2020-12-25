@@ -36,6 +36,8 @@ static int16_t audio_data[I2S_FIFO_DEPTH/2];
 static int gGain;
 static int gMaxGain_sensitive = 0x2F;
 
+extern void codec_adc_init(uint8_t sample_rate);
+
 __attribute__((section("ram_code"))) void i2s_isr_ram(void)
 {
     static int total_value = 0;

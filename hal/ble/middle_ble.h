@@ -45,6 +45,13 @@ typedef enum
     MSG_BUTTON
 } msg_source_e;
 
+typedef enum 
+{
+    MSG_BLE_EVT_NULL = 0,
+    MSG_BLE_EVT_CONNECT ,
+    MSG_BLE_EVT_DISCONNECT
+}msg_ble_evt_e;
+
 typedef struct _msg_header_t
 {
     uint8 source;
@@ -71,4 +78,6 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
 int32 mid_ble_event_get(void);
 int32 mid_ble_init(ble_config_t* pt_ble);
 void mid_ble_ota_init(void);
+void mid_ble_disconnect_gatt(void);
+
 #endif /* MIDDLE_BLE_H_ */

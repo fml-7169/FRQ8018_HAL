@@ -13,10 +13,10 @@
 #include "os_timer.h"
 #include "os_mem.h"
 #include "sys_utils.h"
-#include "button.h"
+//#include "button.h"
 #include "jump_table.h"
 
-#include "user_task.h"
+//#include "user_task.h"
 #include "driver_pwm.h"
 #include "app_bridge.h"
 #include "driver_gpio.h"

@@ -11,6 +11,7 @@
 #include "sys_utils.h"
 #include "flash_usage_config.h"
 #include "middle_ble.h"
+#include "ota_service.h"
 
 #define GATT_CHAR1_VALUE_LEN  20
 #define GATT_CHAR2_VALUE_LEN  20
@@ -26,7 +27,8 @@ static const uint8_t gatt_char1_desc[GATT_CHAR1_DESC_LEN] = "for gatt Read";
 static const uint8_t gatt_char2_desc[GATT_CHAR2_DESC_LEN] = "for gatt Write";
 
 static LR_handler gt_ble_lr = NULL;
-
+static int32  g_ble_event = MSG_BLE_EVT_NULL;
+static uint8_t g_ble_conidx = 0;
 /*
  * TYPEDEFS (类型定义)
  */
@@ -291,7 +293,7 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     check_sum = ble_check_sum((uint8*)pt_msg, BLE_PKG_DATA_LEN - 1);
     pt_msg->check_code = check_sum;
 
-    ntf_att.att_idx = GOVEE_GATT_IDX_CHAR2_VALUE;
+    ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
     //co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
     ntf_att.conidx = 0;
     ntf_att.svc_id = govee_sp_svc_id;
@@ -427,6 +429,7 @@ static void sp_start_adv(void)
     // Set advertising parameters
     gap_adv_param_t adv_param;
     adv_param.adv_mode = GAP_ADV_MODE_UNDIRECT;
+    adv_param.disc_mode = GAP_ADV_DISC_MODE_GEN_DISC;
     adv_param.adv_addr_type = GAP_ADDR_TYPE_PUBLIC;
     adv_param.adv_chnl_map = GAP_ADV_CHAN_ALL;
     adv_param.adv_filt_policy = GAP_ADV_ALLOW_SCAN_ANY_CON_ANY;
@@ -478,12 +481,16 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
 
         case GAP_EVT_SLAVE_CONNECT:
         {
+            g_ble_event = MSG_BLE_EVT_CONNECT;
+            g_ble_conidx = p_event->param.slave_connect.conidx;
             co_printf("slave[%d],connect. link_num:%d\r\n",p_event->param.slave_connect.conidx,gap_get_connect_num());
         }
         break;
 
         case GAP_EVT_DISCONNECT:
         {
+            g_ble_event = MSG_BLE_EVT_DISCONNECT;
+            g_ble_conidx = 0;
             co_printf("Link[%d] disconnect,reason:0x%02X\r\n",p_event->param.disconnect.conidx
                       ,p_event->param.disconnect.reason);
             sp_start_adv();
@@ -580,6 +587,11 @@ int32 mid_ble_init(ble_config_t* pt_ble)
     return 0;
 }
 
+void mid_ble_disconnect_gatt(void)
+{
+    gap_disconnect_req(g_ble_conidx);
+}
+
 int32 mid_ble_mac_get(uint8* ble_mac)
 {
     if(ble_mac==NULL){
@@ -593,7 +605,9 @@ int32 mid_ble_mac_get(uint8* ble_mac)
 
 int32 mid_ble_event_get(void)
 {
-    return (int32)gap_get_connect_status(0);
+    int32 ble_event = g_ble_event;
+    g_ble_event = MSG_BLE_EVT_NULL;
+    return ble_event;
 }
 
 void mid_ble_ota_init(void)
