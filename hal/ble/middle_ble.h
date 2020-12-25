@@ -45,6 +45,13 @@ typedef enum
     MSG_BUTTON
 } msg_source_e;
 
+typedef enum 
+{
+    MSG_BLE_EVT_NULL = 0,
+    MSG_BLE_EVT_CONNECT ,
+    MSG_BLE_EVT_DISCONNECT
+}msg_ble_evt_e;
+
 typedef struct _msg_header_t
 {
     uint8 source;

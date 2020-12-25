@@ -27,7 +27,7 @@ static const uint8_t gatt_char1_desc[GATT_CHAR1_DESC_LEN] = "for gatt Read";
 static const uint8_t gatt_char2_desc[GATT_CHAR2_DESC_LEN] = "for gatt Write";
 
 static LR_handler gt_ble_lr = NULL;
-
+static int32  g_ble_event = MSG_BLE_EVT_NULL;
 /*
  * TYPEDEFS (类型定义)
  */
@@ -480,12 +480,14 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
 
         case GAP_EVT_SLAVE_CONNECT:
         {
+            g_ble_event = MSG_BLE_EVT_CONNECT;
             co_printf("slave[%d],connect. link_num:%d\r\n",p_event->param.slave_connect.conidx,gap_get_connect_num());
         }
         break;
 
         case GAP_EVT_DISCONNECT:
         {
+            g_ble_event = MSG_BLE_EVT_DISCONNECT;
             co_printf("Link[%d] disconnect,reason:0x%02X\r\n",p_event->param.disconnect.conidx
                       ,p_event->param.disconnect.reason);
             sp_start_adv();
@@ -595,7 +597,9 @@ int32 mid_ble_mac_get(uint8* ble_mac)
 
 int32 mid_ble_event_get(void)
 {
-    return (int32)gap_get_connect_status(0);
+    int32 ble_event = g_ble_event;
+    g_ble_event = MSG_BLE_EVT_NULL;
+    return ble_event;
 }
 
 void mid_ble_ota_init(void)
