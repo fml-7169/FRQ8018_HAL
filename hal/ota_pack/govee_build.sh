@@ -12,10 +12,10 @@ ota_file_path_c_tail="/components/ble/profiles/ble_ota/ota.c"
 pack_file_path_c_tail="/../hal/ota_pack/ota.c"
 
 ota_file_path_h_tail="/components/ble/profiles/ble_ota/ota.h"
-pack_file_path_h_tail="../hal/ota_pack/ota.h"
+pack_file_path_h_tail="/../hal/ota_pack/ota.h"
 
-cp -r $frq_sdk_path$ota_file_path_c_tail $frq_sdk_path$ota_file_path_c_tail
-cp -r $frq_sdk_path$ota_file_path_h_tail $frq_sdk_path$ota_file_path_h_tail
+cp -r $frq_sdk_path$pack_file_path_c_tail $frq_sdk_path$ota_file_path_c_tail
+cp -r $frq_sdk_path$pack_file_path_h_tail $frq_sdk_path$ota_file_path_h_tail
 
 #build frq
 make clean && make
