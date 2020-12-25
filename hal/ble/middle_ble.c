@@ -12,6 +12,7 @@
 #include "flash_usage_config.h"
 #include "middle_ble.h"
 #include "ota_service.h"
+#include "govee_utils.h"
 
 #define GATT_CHAR1_VALUE_LEN  20
 #define GATT_CHAR2_VALUE_LEN  20
