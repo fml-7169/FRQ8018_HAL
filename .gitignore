@@ -1,2 +1,3 @@
 **/build
 cscope.*
+./hal/ota_pack/mk_RF801_crc
