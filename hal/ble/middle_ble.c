@@ -12,6 +12,7 @@
 #include "flash_usage_config.h"
 #include "middle_ble.h"
 #include "ota_service.h"
+#include "govee_utils.h"
 
 #define GATT_CHAR1_VALUE_LEN  20
 #define GATT_CHAR2_VALUE_LEN  20
@@ -301,8 +302,8 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
 
-    //co_printf("send msg : ");
-    //govee_utils_data_print(send_data, data_len, 0);
+    co_printf("ble send : ");
+    govee_utils_data_print(send_data, data_len, 0);
 }
 
 
