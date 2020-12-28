@@ -537,6 +537,11 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
     }
 }
 
+void mid_ble_gap_update(ble_config_t* pt_ble)
+{
+    gap_set_advertising_data(pt_ble->p_ble_adv,pt_ble->ble_adv_len);
+    gap_set_advertising_rsp_data(pt_ble->p_ble_resp,pt_ble->ble_resp_len);
+}
 
 int32 mid_ble_init(ble_config_t* pt_ble)
 {
@@ -616,4 +621,6 @@ void mid_ble_ota_init(void)
 {
     ota_gatt_add_service();
 }
+
+
 

@@ -77,6 +77,7 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
 
 int32 mid_ble_event_get(void);
 int32 mid_ble_init(ble_config_t* pt_ble);
+void mid_ble_gap_update(ble_config_t* pt_ble);
 void mid_ble_ota_init(void);
 void mid_ble_disconnect_gatt(void);
 
