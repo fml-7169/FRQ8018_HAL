@@ -41,5 +41,9 @@ void app_bridge_gpio_config(int index, int dir);
 void app_bridge_gpio_output(int index, uint32 val);
 uint32 app_bridge_gpio_input(int index);
 
+void app_bridge_wdt_init(uint8 wdt_time);
+void app_bridge_wdt_feed(void);
+void app_bridge_wdt_control(uint8 start);
+uint8_t app_bridge_getotas_status(void);
 
 #endif /* APP_BRIDGE_H_ */

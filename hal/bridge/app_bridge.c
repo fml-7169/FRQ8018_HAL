@@ -23,6 +23,8 @@
 #include "co_math.h"
 
 #include "driver_flash.h"
+#include "driver_wdt.h"
+
 
 #define APP_BRIDGE_UUID_OFFSET_ADDR     0x400
 
@@ -182,4 +184,31 @@ void app_bridge_timer_destroy(uint32 handle)
         os_timer_destroy(ptimer);
         os_free(ptimer);
     }
+}
+
+void app_bridge_wdt_init(uint8 wdt_time)
+{
+    wdt_init(WDT_ACT_CALL_IRQ, wdt_time);
+    wdt_start();
+    wdt_feed();
+}
+
+void app_bridge_wdt_feed(void)
+{
+    wdt_feed();
+}
+
+void app_bridge_wdt_control(uint8 start)
+{
+    if(!start){     // 0 stop
+        wdt_stop();
+    }
+    else{           //start
+        wdt_start();
+    }
+}
+
+uint8_t app_bridge_getotas_status(void)
+{
+    return app_otas_get_status();
 }

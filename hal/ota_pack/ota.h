@@ -167,6 +167,7 @@ void ota_init(uint8_t conidx);
 void ota_deinit(uint8_t conidx);
 void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len);
 uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data);
+uint8_t app_otas_get_status(void);
 
 #endif //__OTA_H
 

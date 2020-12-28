@@ -23,6 +23,8 @@
 #include "ota_service.h"
 #include "flash_usage_config.h"
 #include "os_timer.h"
+
+#define OTA_DATA_MAX    512
 uint32_t Crc32CalByByte(int crc,uint8_t* ptr, int len);
 struct app_otas_status_t
 {
@@ -37,14 +39,16 @@ static struct buffed_pkt
     uint16_t malloced_pkt_num;  //num of pkts
 } first_pkt = {0};
 uint8_t first_loop = false;
-static uint16_t at_data_idx;
+static uint16_t at_data_idx,write_data_idx = 0;
 static bool ota_recving_data = false;
 static uint16_t ota_recving_data_index = 0;
 static uint16_t ota_recving_expected_length = 0;
 static uint8_t *ota_recving_buffer = NULL;
 static os_timer_t os_timer_ota;
 static uint32_t ota_addr_check,ota_addr_check_len = 0;
-static uint8_t resend_count = 0;
+static uint32_t ota_packet_total_len = 0;
+static uint32_t ota_write_flash_addr = 0;
+static uint8_t g_otas_get_status = 0;
 
 extern uint8_t app_boot_get_storage_type(void);
 extern void app_boot_save_data(uint32_t dest, uint8_t *src, uint32_t len);
@@ -147,14 +151,20 @@ void ota_init(uint8_t conidx)
     first_loop = true;
     at_data_idx = 0;
     ota_addr_check = 0;
+    write_data_idx = 0;
+    ota_recving_data_index = 0;
+    ota_recving_data = false;
 }
 void ota_deinit(uint8_t conidx)
 {
+    write_data_idx = 0;
+    ota_recving_data = false;
     ota_clr_buffed_pkt(conidx);
 
     if(ota_recving_buffer != NULL) {
         os_free(ota_recving_buffer);
         ota_recving_buffer = NULL;
+        ota_recving_data_index = 0;
     }
 }
 void __attribute__((weak)) ota_change_flash_pin(void)
@@ -203,42 +213,75 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
     struct app_ota_cmd_hdr_t *cmd_hdr = (struct app_ota_cmd_hdr_t *)p_data;
     struct app_ota_rsp_hdr_t *rsp_hdr;
     uint16_t rsp_data_len = (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN+OTA_HDR_RESULT_LEN);
-    uint16_t i =0 ;
+    uint16_t i =0,packet_idx = 0;
+    uint8_t rsp_flag = 1;
 
     if(first_loop)
     {
         first_loop = false;
-        //gap_conn_param_update(conidx, 12, 12, 0, 500);
+        gap_conn_param_update(conidx, 6, 6, 0, 500);
         system_latency_disable(conidx);
-        gatt_mtu_exchange_req(conidx);
+        //gatt_mtu_exchange_req(conidx);
 
         if(ota_recving_buffer == NULL) {
             ota_recving_buffer = os_malloc(512);
         }
+        g_otas_get_status = 1;
         ota_start();
     }
-    co_printf("app_otas_recv_data[%d]: %d, %d. %d\r\n",at_data_idx, gatt_get_mtu(conidx), len, cmd_hdr->cmd.write_data.length);
-    show_reg(p_data,sizeof(struct app_ota_cmd_hdr_t),1);
-    os_timer_stop(&os_timer_ota);
+    //co_printf("app_otas_recv_data[%d]: %d, %d. %d\r\n",at_data_idx, gatt_get_mtu(conidx), len, cmd_hdr->cmd.write_data.length);
+    //show_reg(p_data,sizeof(struct app_ota_cmd_hdr_t),1);
+    //os_timer_stop(&os_timer_ota);
     os_timer_start(&os_timer_ota, OTA_TIMEOUT, 0);
     at_data_idx++;
+    wdt_feed();
 
     // 支持手机端将包从应用层进行拆分的功能，而不是应用层发长包，L2CAP去拆分。
     if(ota_recving_data) {
-        memcpy(ota_recving_buffer+ota_recving_data_index, p_data, len);
-        ota_recving_data_index += len;
-        ota_recving_expected_length -= len;
-        if(ota_recving_expected_length != 0) {
-            return;
+        // check data idx
+        packet_idx = (uint16_t)(p_data[1] << 8)|p_data[0];
+        co_printf("packet_idx=%x\r\n",packet_idx);
+        if(packet_idx > write_data_idx)
+        {
+            // index error
+            if(((packet_idx - write_data_idx) > 1) && (packet_idx < 0xfff0))
+            {
+                ota_stop(OTA_ADDR_ERROR);
+                gap_disconnect_req(conidx);
+                return;
+            }
+            write_data_idx = packet_idx;
+            if(((ota_recving_data_index+len-2) < OTA_DATA_MAX))
+            {
+                memcpy(ota_recving_buffer+ota_recving_data_index, &p_data[2], len-2);
+                ota_recving_data_index += len-2;
+                if(packet_idx == 0xfff0) // the last packet
+                {
+                    co_printf("==last packet==\r\n");
+                    cmd_hdr->opcode = OTA_CMD_WRITE_DATA;
+                    ota_recving_data = false;
+                    packet_idx = 0;
+                }
+                else
+                    return;
+            }
+            else
+            {
+            #if 0
+                ota_recving_data = false;
+                ota_recving_buffer[0] = OTA_CMD_WRITE_DATA;
+                p_data = ota_recving_buffer;
+                cmd_hdr = (struct app_ota_cmd_hdr_t *)ota_recving_buffer;
+            #else
+                cmd_hdr->opcode = OTA_CMD_WRITE_DATA;
+            #endif
+            }
         }
-        ota_recving_data = false;
-        ota_recving_buffer[0] = OTA_CMD_WRITE_DATA;
-        p_data = ota_recving_buffer;
-        cmd_hdr = (struct app_ota_cmd_hdr_t *)ota_recving_buffer;
+        else
+            return;
     }
     
-    ota_change_flash_pin();
-    wdt_feed();
+    ota_change_flash_pin();    
 
     switch(cmd_hdr->opcode)
     {
@@ -255,6 +298,17 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             break;
         case OTA_CMD_PAGE_ERASE:
             rsp_data_len += sizeof(struct page_erase_rsp);
+            break;
+        case OTA_CMD_CHIP_ERASE:
+            if(cmd_hdr->cmd.write_data.base_address > app_otas_get_image_size())
+            {
+                gap_disconnect_req(conidx);
+                return;
+            }
+            ota_recving_data = true;
+            ota_packet_total_len = cmd_hdr->cmd.write_data.base_address;
+            ota_write_flash_addr = app_otas_get_storage_address();
+            co_printf("=======ota packet total len=======%x %x\r\n",ota_packet_total_len,ota_write_flash_addr);
             break;
         case OTA_CMD_WRITE_DATA:
             rsp_data_len += sizeof(struct write_data_rsp);
@@ -289,10 +343,9 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             }
             break;
         case OTA_CMD_NULL:
-            memcpy(ota_recving_buffer, p_data, len);
-            ota_recving_expected_length = cmd_hdr->cmd.write_data.length;
-            ota_recving_data_index = len;
-            ota_recving_data = true;
+            //memcpy(ota_recving_buffer, p_data, len);
+            //ota_recving_expected_length = cmd_hdr->cmd.write_data.length;
+            //ota_recving_data_index = len;
             ota_recover_flash_pin();
             return;
     }
@@ -314,18 +367,18 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             break;
         case OTA_CMD_GET_STR_BASE:
             rsp_hdr->rsp.baseaddr.baseaddr = app_otas_get_storage_address();
-            ota_addr_check = rsp_hdr->rsp.baseaddr.baseaddr;
+            //ota_addr_check = rsp_hdr->rsp.baseaddr.baseaddr;
             break;
         case OTA_CMD_READ_FW_VER:
             rsp_hdr->rsp.version.firmware_version = __jump_table.firmware_version;
             break;
         case OTA_CMD_PAGE_ERASE:
         {
-            rsp_hdr->rsp.page_erase.base_address = cmd_hdr->cmd.page_erase.base_address;
-            //uint32_t erase_length = cmd_hdr->cmd.page_erase.base_address;
+            //rsp_hdr->rsp.page_erase.base_address = cmd_hdr->cmd.page_erase.base_address;
+            uint32_t erase_length = cmd_hdr->cmd.page_erase.base_address;
             uint32_t new_bin_base = app_otas_get_storage_address();
-            //rsp_hdr->rsp.page_erase.base_address = new_bin_base;
-#if 1
+            rsp_hdr->rsp.page_erase.base_address = new_bin_base;
+#if 0
             ///co_printf("cur_code_addr:%x\r\n",new_bin_base);
             if( app_otas_get_curr_code_address() == 0 )
             {
@@ -350,7 +403,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 break;
             }
 #endif
-            //for(;((rsp_hdr->rsp.page_erase.base_address-new_bin_base) < erase_length);)
+            for(;((rsp_hdr->rsp.page_erase.base_address-new_bin_base) < erase_length);)
             {
                 if(rsp_hdr->rsp.page_erase.base_address == new_bin_base)
                 {
@@ -368,17 +421,27 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 else
                     flash_erase(rsp_hdr->rsp.page_erase.base_address, 0x1000);
                     
-                //rsp_hdr->rsp.page_erase.base_address += 0x1000;
+                rsp_hdr->rsp.page_erase.base_address += 0x1000;
             }
+            co_printf("=last erase page=%x\r\n",(rsp_hdr->rsp.page_erase.base_address));
         }
         break;
         case OTA_CMD_CHIP_ERASE:
             break;
         case OTA_CMD_WRITE_DATA:
         {
-            rsp_hdr->rsp.write_data.base_address = cmd_hdr->cmd.write_data.base_address;
-            rsp_hdr->rsp.write_data.length = cmd_hdr->cmd.write_data.length;
+            uint32_t new_bin_base = app_otas_get_storage_address(); 
+            rsp_flag = 0;
+            //ota_gatt_report_notify(conidx,req->buffer,req->length);
+            //co_printf("======write_addr====%x\r\n",ota_write_flash_addr);
+            rsp_hdr->rsp.write_data.base_address = ota_write_flash_addr; // cmd_hdr->cmd.write_data.base_address;
+            rsp_hdr->rsp.write_data.length = ota_recving_data_index; // cmd_hdr->cmd.write_data.length;
+// check write flash addr
+            if((!new_bin_base && (rsp_hdr->rsp.write_data.base_address > app_otas_get_image_size())) ||
+                (new_bin_base && (rsp_hdr->rsp.write_data.base_address > 2*app_otas_get_image_size())))
+                break;
 //write user data.
+#if 0
             if(rsp_hdr->rsp.write_data.base_address >= (app_otas_get_image_size()*2))
             {
                 app_otas_save_data(rsp_hdr->rsp.write_data.base_address,
@@ -386,22 +449,23 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                                    rsp_hdr->rsp.write_data.length);
                 break;
             }
-
-            uint32_t new_bin_base = app_otas_get_storage_address();            
+#endif                       
             if( rsp_hdr->rsp.write_data.base_address == new_bin_base )
             {
                 if(first_pkt.buf == NULL)
                 {
-                    first_pkt.malloced_pkt_num = ROUND(256,rsp_hdr->rsp.write_data.length);
-                    first_pkt.buf = os_malloc(rsp_hdr->rsp.write_data.length * first_pkt.malloced_pkt_num);
-                    uint8_t * tmp = p_data + (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN)+sizeof(struct write_data_cmd);
+                    //first_pkt.malloced_pkt_num = ROUND(256,rsp_hdr->rsp.write_data.length);
+                    first_pkt.buf = os_malloc(OTA_DATA_MAX/*rsp_hdr->rsp.write_data.length * first_pkt.malloced_pkt_num*/);
+                    uint8_t * tmp = ota_recving_buffer; // p_data + (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN)+sizeof(struct write_data_cmd);
                     first_pkt.len = rsp_hdr->rsp.write_data.length;
                     memcpy(first_pkt.buf,tmp,first_pkt.len);
-                    ota_addr_check_len = rsp_hdr->rsp.write_data.length;
+                    ota_write_flash_addr += rsp_hdr->rsp.write_data.length;
+                    //ota_addr_check_len = rsp_hdr->rsp.write_data.length;
                 }
             }
             else
             {
+            #if 0
                 if((rsp_hdr->rsp.write_data.base_address !=(ota_addr_check + ota_addr_check_len)) &&
                     (rsp_hdr->rsp.write_data.base_address !=ota_addr_check)){//for OTA write addr error  no req
                     co_printf("rsp_hdr->rsp.write_data.base_address = %x\r\nota_addr_check=%x,\r\nlen = %d\r\nSUM=%x\r\n",rsp_hdr->rsp.write_data.base_address,ota_addr_check,len,rsp_hdr->rsp.write_data.base_address + len);
@@ -411,7 +475,8 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 }else{
                     ota_addr_check = rsp_hdr->rsp.write_data.base_address;
                     ota_addr_check_len = rsp_hdr->rsp.write_data.length;
-                }
+                } 
+            
                 if( rsp_hdr->rsp.write_data.base_address <= (new_bin_base + rsp_hdr->rsp.write_data.length *(first_pkt.malloced_pkt_num-1)) )
                 {
                     if(first_pkt.buf != NULL)
@@ -422,13 +487,22 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                     }
                 }
                 else
+            #endif
+                {
+                #if 1
+                    app_otas_save_data(rsp_hdr->rsp.write_data.base_address,ota_recving_buffer,rsp_hdr->rsp.write_data.length);
+                    ota_write_flash_addr += rsp_hdr->rsp.write_data.length;
+                #else
                     app_otas_save_data(rsp_hdr->rsp.write_data.base_address,
                                        p_data + (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN)+sizeof(struct write_data_cmd),
                                        rsp_hdr->rsp.write_data.length);
+                #endif
+                }
                 //change firmware version in buffed pkt.
-                if(first_pkt.len >= rsp_hdr->rsp.write_data.length * first_pkt.malloced_pkt_num)
+                if(first_pkt.len > 256/*rsp_hdr->rsp.write_data.length * first_pkt.malloced_pkt_num*/)
                 {
                     uint32_t firmware_offset = (uint32_t)&((struct jump_table_t *)0x01000000)->firmware_version- 0x01000000;
+                    co_printf("old_ver:%08X\r\n",*(uint32_t *)((uint32_t)first_pkt.buf + firmware_offset));
                     if( *(uint32_t *)((uint32_t)first_pkt.buf + firmware_offset) <= app_otas_get_curr_firmwave_version() )
                     {
                         uint32_t new_bin_ver = app_otas_get_curr_firmwave_version() + 1;
@@ -439,6 +513,25 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                     }
                     //write data from 256 ~ rsp_hdr->rsp.write_data.length * first_pkt.malloced_pkt_num
                     app_otas_save_data(new_bin_base + 256,first_pkt.buf + 256,first_pkt.len - 256);
+                    first_pkt.len = 256;
+                }
+            }
+            
+            if(packet_idx == 0xfff0)
+            {
+                co_printf("==last packet1==\r\n");
+                app_otas_save_data(ota_write_flash_addr,&p_data[2],(len-2));
+                ota_write_flash_addr += (len-2);
+                ota_recving_data = false;
+            }
+            else
+            {
+                memset(ota_recving_buffer,0,OTA_DATA_MAX);
+                ota_recving_data_index = 0;
+                if(((ota_recving_data_index+len-2) < OTA_DATA_MAX))
+                {
+                    memcpy(ota_recving_buffer+ota_recving_data_index, &p_data[2], len-2);
+                    ota_recving_data_index += len-2;
                 }
             }
         }
@@ -476,14 +569,16 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             if(first_pkt.buf != NULL)
             {
                 uint32_t new_bin_base = app_otas_get_storage_address();
-
+                uint32_t bin_crc_data = *(uint32_t *)((uint32_t)first_pkt.buf);
+                
 //                co_printf("cmd_hdr->cmd.fir_crc_data.firmware_length = %x\r\n",cmd_hdr->cmd.fir_crc_data.firmware_length);
-                co_printf("cmd_hdr->cmd.fir_crc_data.CRC32_date = %x\r\n",cmd_hdr->cmd.fir_crc_data.CRC32_data);
+                co_printf("cmd_hdr->cmd.fir_crc_data.CRC32_date = %x\r\n",bin_crc_data/*cmd_hdr->cmd.fir_crc_data.CRC32_data*/);
                 uint32_t crc_data = 0;
-                uint16_t crc_packet_num = (cmd_hdr->cmd.fir_crc_data.firmware_length-256)/256;
+                uint16_t crc_packet_num = (ota_packet_total_len-256)/256; // (cmd_hdr->cmd.fir_crc_data.firmware_length-256)/256;
                 uint8_t *crc32_check_addr = (uint8_t*)(new_bin_base+256);
                 co_printf("crc32_check_addr: 0x%x,num=%d\r\n",crc32_check_addr,crc_packet_num);
                 uint8_t check_data[256] = {0};
+                #if 1
                 //uint32_t current_remap_address, remap_size;
                 for( i = 0;i < crc_packet_num;i++){
                     uint32_t current_remap_address, remap_size;
@@ -504,8 +599,8 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 }
                 co_printf("crc_data1= %x\r\n",crc_data);
                 //cmd_hdr->cmd.fir_crc_data.firmware_length -= (256*(crc_packet_num+1));
-                if(cmd_hdr->cmd.fir_crc_data.firmware_length > (256*(crc_packet_num+1))){
-                    cmd_hdr->cmd.fir_crc_data.firmware_length -= (256*(crc_packet_num+1));
+                if(ota_packet_total_len > (256*(crc_packet_num+1))){
+                    ota_packet_total_len -= (256*(crc_packet_num+1));
                     uint32_t current_remap_address, remap_size;
                     current_remap_address = system_regs->remap_virtual_addr;
                     remap_size = system_regs->remap_length;
@@ -515,7 +610,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                     system_regs->remap_length = 0;
                     //disable_cache();
                     //enable_cache(true);
-                    crc_data =  Crc32CalByByte(crc_data,crc32_check_addr+256*i+0x01000000, cmd_hdr->cmd.fir_crc_data.firmware_length);
+                    crc_data =  Crc32CalByByte(crc_data,crc32_check_addr+256*i+0x01000000, ota_packet_total_len);
                     //disable_cache();
                     //enable_cache(true);
                     system_regs->remap_virtual_addr = current_remap_address;
@@ -525,9 +620,10 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 }
               // crc_data =  crc32(crc_data, (const unsigned char *)new_bin_base, cmd_hdr->cmd.fir_crc_data.firmware_length);
                co_printf("crc_data= %x\r\n",crc_data);
-               uint32_t bin_crc_data = *(uint32_t *)((uint32_t)first_pkt.buf);
+              #endif 
                //if(crc_data == cmd_hdr->cmd.fir_crc_data.CRC32_data){
                if(crc_data == bin_crc_data){
+               rsp_hdr->result = OTA_RSP_SUCCESS;
 #ifdef FLASH_PROTECT
                 flash_protect_disable(0);
 #endif	
@@ -539,12 +635,14 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 app_otas_save_data(new_bin_base,first_pkt.buf,256);
                 }
                else{
+                    rsp_hdr->result = OTA_RSP_ERROR;
                     co_printf("crc32 check fail\r\n\r\n");
-                    os_free(req);
                     ota_stop(OTA_CHECK_FAIL);
-                    platform_reset_patch(0);
+                    //platform_reset_patch(0);
                }
             }
+            ota_gatt_report_notify(conidx,req->buffer,req->length);
+            os_free(req);
             uart_finish_transfers(UART1_BASE);
             ota_clr_buffed_pkt(conidx);
             //NVIC_SystemReset();
@@ -555,12 +653,16 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             break;
     }
 
+    if(rsp_flag)
     ota_gatt_report_notify(conidx,req->buffer,req->length);
     ota_recover_flash_pin();
     os_free(req);
 }
 
-
+uint8_t app_otas_get_status(void)
+{
+    return  g_otas_get_status;
+}
 
 uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data)
 {
