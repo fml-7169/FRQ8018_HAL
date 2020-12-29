@@ -9,6 +9,7 @@
 
 #include "gap_api.h"
 #include "gatt_api.h"
+#include "ota.h"
 
 #include "os_timer.h"
 #include "os_mem.h"
