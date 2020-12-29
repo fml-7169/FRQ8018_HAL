@@ -23,6 +23,7 @@
 #include "ota_service.h"
 #include "flash_usage_config.h"
 #include "os_timer.h"
+#include "os_task.h"
 
 #define OTA_DATA_MAX    512
 uint32_t Crc32CalByByte(int crc,uint8_t* ptr, int len);
@@ -48,6 +49,7 @@ static os_timer_t os_timer_ota;
 static uint32_t ota_addr_check,ota_addr_check_len = 0;
 static uint32_t ota_packet_total_len = 0;
 static uint32_t ota_write_flash_addr = 0;
+static os_timer_t ota_reset_t;
 static uint8_t g_otas_get_status = 0;
 
 extern uint8_t app_boot_get_storage_type(void);
@@ -208,6 +210,17 @@ void os_timer_ota_cb(void *arg)
     co_printf("os_timer_ota_cb\r\n");
 }
 
+void app_otas_over_reset_dev(void * arg)
+{
+    platform_reset_patch(0);
+}
+
+void app_otas_reset_delay_start(void)
+{
+    os_timer_init(&ota_reset_t,app_otas_over_reset_dev,NULL);
+    os_timer_start(&ota_reset_t,100,false);
+}
+
 void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
 {
     struct app_ota_cmd_hdr_t *cmd_hdr = (struct app_ota_cmd_hdr_t *)p_data;
@@ -221,7 +234,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
         first_loop = false;
         gap_conn_param_update(conidx, 6, 6, 0, 500);
         system_latency_disable(conidx);
-        //gatt_mtu_exchange_req(conidx);
+        gatt_mtu_exchange_req(conidx);
 
         if(ota_recving_buffer == NULL) {
             ota_recving_buffer = os_malloc(512);
@@ -229,8 +242,8 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
         g_otas_get_status = 1;
         ota_start();
     }
-    //co_printf("app_otas_recv_data[%d]: %d, %d. %d\r\n",at_data_idx, gatt_get_mtu(conidx), len, cmd_hdr->cmd.write_data.length);
-    //show_reg(p_data,sizeof(struct app_ota_cmd_hdr_t),1);
+    co_printf("app_otas_recv_data[%d]: %d, %d. %d\r\n",at_data_idx, gatt_get_mtu(conidx), len, cmd_hdr->cmd.write_data.length);
+    show_reg(p_data,sizeof(struct app_ota_cmd_hdr_t),1);
     //os_timer_stop(&os_timer_ota);
     os_timer_start(&os_timer_ota, OTA_TIMEOUT, 0);
     at_data_idx++;
@@ -255,6 +268,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             {
                 memcpy(ota_recving_buffer+ota_recving_data_index, &p_data[2], len-2);
                 ota_recving_data_index += len-2;
+                
                 if(packet_idx == 0xfff0) // the last packet
                 {
                     co_printf("==last packet==\r\n");
@@ -263,7 +277,14 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                     packet_idx = 0;
                 }
                 else
-                    return;
+                {
+                    if(!(write_data_idx % 10))
+                    {
+                        cmd_hdr->opcode = OTA_CMD_NULL+1;
+                    }
+                    else
+                        return;
+                }
             }
             else
             {
@@ -399,6 +420,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
 #else
             if(erase_length > app_otas_get_image_size())
             {
+                co_printf("==over erase size==%x\r\n",erase_length);
                 gap_disconnect_req(conidx);
                 break;
             }
@@ -430,8 +452,9 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             break;
         case OTA_CMD_WRITE_DATA:
         {
-            uint32_t new_bin_base = app_otas_get_storage_address(); 
-            rsp_flag = 0;
+            uint32_t new_bin_base = app_otas_get_storage_address();
+            if((write_data_idx % 10))
+                rsp_flag = 0;
             //ota_gatt_report_notify(conidx,req->buffer,req->length);
             //co_printf("======write_addr====%x\r\n",ota_write_flash_addr);
             rsp_hdr->rsp.write_data.base_address = ota_write_flash_addr; // cmd_hdr->cmd.write_data.base_address;
@@ -641,12 +664,13 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                     //platform_reset_patch(0);
                }
             }
-            ota_gatt_report_notify(conidx,req->buffer,req->length);
-            os_free(req);
+            //ota_gatt_report_notify(conidx,req->buffer,req->length);
+            //os_free(req);
             uart_finish_transfers(UART1_BASE);
             ota_clr_buffed_pkt(conidx);
             //NVIC_SystemReset();
-            platform_reset_patch(0);
+            //platform_reset_patch(0);
+            app_otas_reset_delay_start();
             break;
         default:
             rsp_hdr->result = OTA_RSP_UNKNOWN_CMD;
@@ -663,6 +687,7 @@ uint8_t app_otas_get_status(void)
 {
     return  g_otas_get_status;
 }
+
 
 uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data)
 {

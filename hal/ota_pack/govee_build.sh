@@ -40,7 +40,7 @@ prj_file_os_name=$prj_file_os_head$prj_file_name$prj_file_os_tail
 # add crc
 if [ ! -d "$prj_file_os_name" ]; then
     cd $frq_sdk_path$pack_file_path  && gcc mk_RF801_crc.c -o mk_RF801_crc
-    cp mk_RF801_crc $prj_path && cd $prj_path
+    cp mk_RF801_crc $prj_path && rm -rf mk_RF801_crc && cd $prj_path
     ./mk_RF801_crc $prj_file_os_name
     hexdump -n 4 $prj_file_os_name 
     rm -rf mk_RF801_crc
