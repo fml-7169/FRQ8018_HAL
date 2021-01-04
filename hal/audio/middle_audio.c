@@ -9,7 +9,6 @@
 #include "os_task.h"
 #include "os_msg_q.h"
 #include "co_printf.h"
-#include "user_task.h"
 #include "driver_plf.h"
 #include "driver_system.h"
 #include "driver_i2s.h"
