@@ -12,6 +12,8 @@
 typedef void (*read_callback)(uint8* p_data, uint32 data_len);
 typedef void (*event_callback)(uint8 type, void* args);
 
+typedef void (* connect_callback)(uint8 type);          // 0 disconncet 1 disconnect
+
 typedef enum
 {
     BLE_CONNECTED = 1,
@@ -26,6 +28,7 @@ typedef struct
     int32 ble_adv_len;
     int32 ble_resp_len;
     int32 ble_name_len;
+    connect_callback ble_connect;
 } ble_config_t;
 
 typedef struct _ble_msg_t
