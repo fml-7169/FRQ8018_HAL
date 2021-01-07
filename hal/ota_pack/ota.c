@@ -25,8 +25,13 @@
 #include "os_timer.h"
 #include "os_task.h"
 
+extern void disable_cache(void);
+extern void enable_cache(uint8_t invalid_ram);
+
 #define OTA_DATA_MAX    512
 uint32_t Crc32CalByByte(int crc,uint8_t* ptr, int len);
+uint8_t app_otas_crc_cal(uint32_t firmware_length,uint32_t new_bin_addr,uint32_t crc_data_t);
+
 struct app_otas_status_t
 {
     uint8_t read_opcode;
@@ -50,7 +55,6 @@ static uint32_t ota_addr_check,ota_addr_check_len = 0;
 static uint32_t ota_packet_total_len = 0;
 static uint32_t ota_write_flash_addr = 0;
 static os_timer_t ota_reset_t;
-static uint8_t g_otas_get_status = 0;
 
 extern uint8_t app_boot_get_storage_type(void);
 extern void app_boot_save_data(uint32_t dest, uint8_t *src, uint32_t len);
@@ -58,6 +62,14 @@ extern void app_boot_load_data(uint8_t *dest, uint32_t src, uint32_t len);
 extern void system_set_cache_config(uint8_t value, uint8_t count_10us);
 
 void os_timer_ota_cb(void *arg);
+
+static uint8_t g_otas_get_status = 0;
+static ota_update_cb ota_event_callback = NULL;
+uint8_t app_ota_init(ota_update_cb ota_cb)
+{
+    ota_event_callback = ota_cb;
+}
+
 
 static uint32_t app_otas_get_curr_firmwave_version(void)
 {
@@ -191,6 +203,11 @@ void __attribute__((weak)) ota_stop(ota_warning_type evt_id)
     os_timer_destroy(&os_timer_ota);
     ota_deinit(0);
     ota_init(0);//不断线的情况下，重新初始化
+    g_otas_get_status = 0;
+    if (ota_event_callback != NULL) {
+        ota_event_callback(1); //end
+    }
+
     switch (evt_id)
     {
         case OTA_TIMOUT:
@@ -226,7 +243,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
     struct app_ota_cmd_hdr_t *cmd_hdr = (struct app_ota_cmd_hdr_t *)p_data;
     struct app_ota_rsp_hdr_t *rsp_hdr;
     uint16_t rsp_data_len = (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN+OTA_HDR_RESULT_LEN);
-    uint16_t i =0,packet_idx = 0;
+    uint16_t packet_idx = 0;
     uint8_t rsp_flag = 1;
 
     if(first_loop)
@@ -235,11 +252,14 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
         gap_conn_param_update(conidx, 6, 6, 0, 500);
         system_latency_disable(conidx);
         gatt_mtu_exchange_req(conidx);
+        g_otas_get_status = 1;
+        if (ota_event_callback != NULL) {
+            ota_event_callback(0); //start
+        }
 
         if(ota_recving_buffer == NULL) {
             ota_recving_buffer = os_malloc(512);
         }
-        g_otas_get_status = 1;
         ota_start();
     }
     co_printf("app_otas_recv_data[%d]: %d, %d. %d\r\n",at_data_idx, gatt_get_mtu(conidx), len, cmd_hdr->cmd.write_data.length);
@@ -594,58 +614,9 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
                 uint32_t new_bin_base = app_otas_get_storage_address();
                 uint32_t bin_crc_data = *(uint32_t *)((uint32_t)first_pkt.buf);
                 
-//                co_printf("cmd_hdr->cmd.fir_crc_data.firmware_length = %x\r\n",cmd_hdr->cmd.fir_crc_data.firmware_length);
                 co_printf("cmd_hdr->cmd.fir_crc_data.CRC32_date = %x\r\n",bin_crc_data/*cmd_hdr->cmd.fir_crc_data.CRC32_data*/);
-                uint32_t crc_data = 0;
-                uint16_t crc_packet_num = (ota_packet_total_len-256)/256; // (cmd_hdr->cmd.fir_crc_data.firmware_length-256)/256;
-                uint8_t *crc32_check_addr = (uint8_t*)(new_bin_base+256);
-                co_printf("crc32_check_addr: 0x%x,num=%d\r\n",crc32_check_addr,crc_packet_num);
-                uint8_t check_data[256] = {0};
-                #if 1
-                //uint32_t current_remap_address, remap_size;
-                for( i = 0;i < crc_packet_num;i++){
-                    uint32_t current_remap_address, remap_size;
-                    current_remap_address = system_regs->remap_virtual_addr;
-                    remap_size = system_regs->remap_length;
-
-                    GLOBAL_INT_DISABLE();
-                    system_regs->remap_virtual_addr = 0;
-                    system_regs->remap_length = 0;
-                    //disable_cache();
-                    //enable_cache(true);                    
-                    crc_data =  Crc32CalByByte(crc_data, crc32_check_addr+256*i+0x01000000, 256);
-                    //disable_cache();
-                    //enable_cache(true);
-                    system_regs->remap_virtual_addr = current_remap_address;
-                    system_regs->remap_length = remap_size;
-                    GLOBAL_INT_RESTORE();
-                }
-                co_printf("crc_data1= %x\r\n",crc_data);
-                //cmd_hdr->cmd.fir_crc_data.firmware_length -= (256*(crc_packet_num+1));
-                if(ota_packet_total_len > (256*(crc_packet_num+1))){
-                    ota_packet_total_len -= (256*(crc_packet_num+1));
-                    uint32_t current_remap_address, remap_size;
-                    current_remap_address = system_regs->remap_virtual_addr;
-                    remap_size = system_regs->remap_length;
-
-                    GLOBAL_INT_DISABLE();
-                    system_regs->remap_virtual_addr = 0;
-                    system_regs->remap_length = 0;
-                    //disable_cache();
-                    //enable_cache(true);
-                    crc_data =  Crc32CalByByte(crc_data,crc32_check_addr+256*i+0x01000000, ota_packet_total_len);
-                    //disable_cache();
-                    //enable_cache(true);
-                    system_regs->remap_virtual_addr = current_remap_address;
-                    system_regs->remap_length = remap_size;
-                    GLOBAL_INT_RESTORE();
-                   // co_printf("addr:0x%x:   [%d]crc_data= %x, len=%d\r\n",crc32_check_addr+256*i,i,crc_data,cmd_hdr->cmd.fir_crc_data.firmware_length);
-                }
-              // crc_data =  crc32(crc_data, (const unsigned char *)new_bin_base, cmd_hdr->cmd.fir_crc_data.firmware_length);
-               co_printf("crc_data= %x\r\n",crc_data);
-              #endif 
-               //if(crc_data == cmd_hdr->cmd.fir_crc_data.CRC32_data){
-               if(crc_data == bin_crc_data){
+                 
+               if(app_otas_crc_cal(ota_packet_total_len,new_bin_base,bin_crc_data)){
                rsp_hdr->result = OTA_RSP_SUCCESS;
 #ifdef FLASH_PROTECT
                 flash_protect_disable(0);
@@ -683,10 +654,6 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
     os_free(req);
 }
 
-uint8_t app_otas_get_status(void)
-{
-    return  g_otas_get_status;
-}
 
 
 uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data)
@@ -710,7 +677,7 @@ uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data)
     return length;
 }
 
-int crc_table[256] = { 0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
+const int crc_table[256] = { 0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
 				0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3, 0x0edb8832,
 				0x79dcb8a4, 0xe0d5e91e, 0x97d2d988, 0x09b64c2b, 0x7eb17cbd,
 				0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2, 0xf3b97148,
@@ -775,6 +742,63 @@ __attribute__((section("ram_code")))uint32_t Crc32CalByByte(int crc,uint8_t* ptr
         i++;
     }
     return crc&0xFFFFFFFF;
+}
+
+__attribute__((section("ram_code")))uint8_t app_otas_crc_cal(uint32_t firmware_length,uint32_t new_bin_addr,uint32_t crc_data_t)
+{   
+    uint32_t crc_data = 0,i = 0;
+    uint16_t crc_packet_num = (firmware_length-256)/256;
+    uint32_t crc32_check_addr = new_bin_addr+256;
+    uint8_t * crc_check_data = os_malloc(256);
+    uint8_t ret = 0;
+    co_printf("crc32_check_addr: 0x%x\r\n",crc32_check_addr);
+    
+    uint32_t current_remap_address, remap_size;
+    for( i = 0;i < crc_packet_num;i++){
+        current_remap_address = system_regs->remap_virtual_addr;
+        remap_size = system_regs->remap_length;
+
+        GLOBAL_INT_DISABLE();
+        system_regs->remap_virtual_addr = 0;
+         system_regs->remap_length = 0;
+        disable_cache();
+        flash_read((crc32_check_addr+256*i),256,crc_check_data);
+        enable_cache(true);
+        system_regs->remap_virtual_addr = current_remap_address;
+        system_regs->remap_length = remap_size;
+        GLOBAL_INT_RESTORE();
+        crc_data =  Crc32CalByByte(crc_data, crc_check_data, 256);
+    }
+    firmware_length -= (256*(crc_packet_num+1));
+    if(firmware_length > 0){
+        //uint32_t current_remap_address, remap_size;
+        current_remap_address = system_regs->remap_virtual_addr;
+        remap_size = system_regs->remap_length;
+
+        GLOBAL_INT_DISABLE();
+        system_regs->remap_virtual_addr = 0;
+         system_regs->remap_length = 0;
+        disable_cache();
+        flash_read((crc32_check_addr+256*i),firmware_length,crc_check_data);
+        enable_cache(true);
+        system_regs->remap_virtual_addr = current_remap_address;
+        system_regs->remap_length = remap_size;
+        GLOBAL_INT_RESTORE();
+        crc_data =  Crc32CalByByte(crc_data, crc_check_data, firmware_length);
+    }
+    // crc_data =  crc32(crc_data, (const unsigned char *)new_bin_base, cmd_hdr->cmd.fir_crc_data.firmware_length);
+    co_printf("crc_data= %x\r\n",crc_data);	
+
+    os_free(crc_check_data);
+    if(crc_data_t == crc_data)
+        ret = 1;
+
+    return ret;
+}
+
+uint8_t app_otas_get_status(void)
+{
+    return  g_otas_get_status;
 }
 
 
