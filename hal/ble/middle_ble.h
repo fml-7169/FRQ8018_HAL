@@ -58,8 +58,9 @@ typedef enum
 typedef struct _msg_header_t
 {
     uint8 source;
+    uint8 flag;
     uint8 priority;
-    uint16 reserve;
+    uint8 length;
 } msg_header_t;
 
 typedef struct _msg_packet_t

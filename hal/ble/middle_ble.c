@@ -364,6 +364,7 @@ static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)
     msg_packet_t ble_msg;
     memset(&ble_msg, 0, sizeof(msg_packet_t));
     ble_msg.t_header.source = MSG_PHONE_BLE;
+    ble_msg.t_header.length = (uint8)len;
     memcpy(&ble_msg.t_message, write_buf, len);
 
     Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&ble_msg, sizeof(msg_packet_t));
