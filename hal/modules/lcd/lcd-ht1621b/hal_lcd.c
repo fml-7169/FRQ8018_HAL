@@ -572,8 +572,10 @@ void lcd_tile(int row,int type,int enable){
     if(type == LCD_TYPE_MUTE){  // num 0 mute logo            
         lcd_set_seg(HT_S2_LCD);    
         if(enable){ 
-            lcd_set_seg(HT_S0_LCD);
-        }else{
+            lcd_set_seg(HT_S0_LCD);            
+            lcd_set_seg(HT_S2_LCD);    
+        }else{            
+            lcd_clear_seg(HT_S2_LCD);
             lcd_clear_seg(HT_S0_LCD);
         }
     }
