@@ -7,7 +7,7 @@
  */
  
  /*
- * INCLUDES (°üº¬Í·ÎÄ¼þ)
+ * INCLUDES (????Í·?Ä¼?)
  */
 #include <stdbool.h>
 #include "gap_api.h"
@@ -29,20 +29,20 @@
 #include "hal_config.h"
 #include "hal_lcd.h"
 /*
- * MACROS (ºê¶¨Òå)
+ * MACROS (?ê¶¨??)
  */
 
 /*
- * CONSTANTS (³£Á¿¶¨Òå)
+ * CONSTANTS (??Á¿????)
  */
 
 // GAP - Advertisement data (max size = 31 bytes, though this is
 // best kept short to conserve power while advertisting)
-// GAP-¹ã²¥°üµÄÄÚÈÝ,×î³¤31¸ö×Ö½Ú.¶ÌÒ»µãµÄÄÚÈÝ¿ÉÒÔ½ÚÊ¡¹ã²¥Ê±µÄÏµÍ³¹¦ºÄ.
+// GAP-?ã²¥????????,?î³¤31???Ö½?.??Ò»???????Ý¿??Ô½?Ê¡?ã²¥Ê±??ÏµÍ³????.
 static uint8_t adv_data[] =
 {
   // service UUID, to notify central devices what services are included
-  // in this peripheral. ¸æËßcentral±¾»úÓÐÊ²Ã´·þÎñ, µ«ÕâÀïÏÈÖ»·ÅÒ»¸öÖ÷ÒªµÄ.
+  // in this peripheral. ????central??????Ê²Ã´????, ????????Ö»??Ò»????Òª??.
   0x03,   // length of this data
   GAP_ADVTYPE_16BIT_MORE,      // some of the UUID's, but not all
   0xFF,
@@ -51,47 +51,47 @@ static uint8_t adv_data[] =
 
 // GAP - Scan response data (max size = 31 bytes, though this is
 // best kept short to conserve power while advertisting)
-// GAP-Scan responseÄÚÈÝ,×î³¤31¸ö×Ö½Ú.¶ÌÒ»µãµÄÄÚÈÝ¿ÉÒÔ½ÚÊ¡¹ã²¥Ê±µÄÏµÍ³¹¦ºÄ.
+// GAP-Scan response????,?î³¤31???Ö½?.??Ò»???????Ý¿??Ô½?Ê¡?ã²¥Ê±??ÏµÍ³????.
 static uint8_t scan_rsp_data[] =
 {
-  // complete name Éè±¸Ãû×Ö
+  // complete name ?è±¸????
   0x12,   // length of this data
   GAP_ADVTYPE_LOCAL_NAME_COMPLETE,
   'S','i','m','p','l','e',' ','P','e','r','i','p','h','e','r','a','l',
 
-  // Tx power level ·¢Éä¹¦ÂÊ
+  // Tx power level ???ä¹¦??
   0x02,   // length of this data
   GAP_ADVTYPE_POWER_LEVEL,
   0,	   // 0dBm
 };
 
 /*
- * TYPEDEFS (ÀàÐÍ¶¨Òå)
+ * TYPEDEFS (???Í¶???)
  */
 
 /*
- * GLOBAL VARIABLES (È«¾Ö±äÁ¿)
+ * GLOBAL VARIABLES (È«?Ö±?Á¿)
  */
 
 /*
- * LOCAL VARIABLES (±¾µØ±äÁ¿)
+ * LOCAL VARIABLES (???Ø±?Á¿)
  */
 
 
  
 /*
- * LOCAL FUNCTIONS (±¾µØº¯Êý)
+ * LOCAL FUNCTIONS (???Øº???)
  */
 static void sp_start_adv(void);
 /*
- * EXTERN FUNCTIONS (Íâ²¿º¯Êý)
+ * EXTERN FUNCTIONS (?â²¿????)
  */
 
 /*
- * PUBLIC FUNCTIONS (È«¾Öº¯Êý)
+ * PUBLIC FUNCTIONS (È«?Öº???)
  */
 
-/** @function group ble peripheral device APIs (bleÍâÉèÏà¹ØµÄAPI)
+/** @function group ble peripheral device APIs (ble???????Øµ?API)
  * @{
  */
 
@@ -298,6 +298,8 @@ void simple_peripheral_init(void)
 
     plcd_dev= get_device(&hal_module_info_lcd, NULL);
     plcd_dev->lcd_sinit(&LcdPinMap[0],&LcdPinMap[1],&LcdPinMap[2]);
+    plcd_dev->lcd_stem(0,"HHH",strlen("HHH"),0);
+    plcd_dev->lcd_stem(1,"LLL",strlen("LLL"),0);
     
     os_timer_init(&lcd_timer, lcd_timer_func, NULL);    
     os_timer_start(&lcd_timer, 1000*10, true);
