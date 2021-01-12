@@ -168,13 +168,14 @@ void ota_init(uint8_t conidx)
     write_data_idx = 0;
     ota_recving_data_index = 0;
     ota_recving_data = false;
+    g_otas_get_status = 0;
 }
 void ota_deinit(uint8_t conidx)
 {
     write_data_idx = 0;
     ota_recving_data = false;
     ota_clr_buffed_pkt(conidx);
-
+    g_otas_get_status = 0;
     if(ota_recving_buffer != NULL) {
         os_free(ota_recving_buffer);
         ota_recving_buffer = NULL;
@@ -224,6 +225,7 @@ void __attribute__((weak)) ota_stop(ota_warning_type evt_id)
 void os_timer_ota_cb(void *arg)
 {
     ota_stop(OTA_TIMOUT);
+    g_otas_get_status = 0;
     co_printf("os_timer_ota_cb\r\n");
 }
 
