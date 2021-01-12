@@ -58,12 +58,15 @@ static lcd_TypeDef* __lcd = NULL;
    0b00000111, //7
    0b01111111, //8
    0b01101111, //9
-   0b01110111, //A 
-   0b01111100, //B 
-   0b00111001, //C 
-   0b01011110, //D 
-   0b01111001, //E
-   0b01110001 //F   
+   0b01110111, //A  ,10
+   0b01111100, //B  ,11
+   0b00111001, //C   ,12
+   0b01011110, //D ,13
+   0b01111001, //E ,14
+   0b01110001, //F  ,15
+   0b01111101, //G   ,16
+   0b01110110, //H   ,17
+   0b00111000, //L  ,18
  };
  #define LCD_ADDR_LEN   32
  static unsigned char __lcd_ram[LCD_ADDR_LEN] = {0};
@@ -425,6 +428,31 @@ static void lcd_putchar_cached(int index,unsigned char c) {
           case '9':
               lcd_write_ram(index,char_map[9]);
               break;
+          case 'A':
+              lcd_write_ram(index,char_map[10]);
+              break;
+          case 'B':
+              lcd_write_ram(index,char_map[11]);
+              break;
+          case 'C':
+              lcd_write_ram(index,char_map[12]);
+              break;
+          case 'D':
+              lcd_write_ram(index,char_map[13]);
+              break;
+          case 'E':
+              lcd_write_ram(index,char_map[14]);
+          case 'F':
+              lcd_write_ram(index,char_map[15]);
+              break;
+          case 'G':
+              lcd_write_ram(index,char_map[16]);              
+          case 'H':
+              lcd_write_ram(index,char_map[17]);
+              break;
+          case 'L':
+              lcd_write_ram(index,char_map[18]);
+              break;
           case '-':
               lcd_write_ram(index,NEGATIVE);
               break;
@@ -572,8 +600,10 @@ void lcd_tile(int row,int type,int enable){
     if(type == LCD_TYPE_MUTE){  // num 0 mute logo            
         lcd_set_seg(HT_S2_LCD);    
         if(enable){ 
-            lcd_set_seg(HT_S0_LCD);
-        }else{
+            lcd_set_seg(HT_S0_LCD);            
+            lcd_set_seg(HT_S2_LCD);    
+        }else{            
+            lcd_clear_seg(HT_S2_LCD);
             lcd_clear_seg(HT_S0_LCD);
         }
     }
