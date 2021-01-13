@@ -27,7 +27,7 @@
 
 #include "user_task.h"
 #include "hal_config.h"
-#include "hal_lcd_4.h"
+#include "hal_lcd.h"
 /*
  * MACROS (?궨??)
  */
