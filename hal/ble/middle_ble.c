@@ -628,5 +628,15 @@ void mid_ble_ota_init(void)
     ota_gatt_add_service();
 }
 
+int8 mid_ble_advertising_switch(int8 on)       //   1 on  0 off
+{
+    if(0!=on){
+        gap_start_advertising(0);
+    }
+    else{
+        gap_stop_advertising();
+    }
+    return 0;
+}
 
 
