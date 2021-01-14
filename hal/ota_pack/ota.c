@@ -65,11 +65,17 @@ void os_timer_ota_cb(void *arg);
 
 static uint8_t g_otas_get_status = 0;
 static ota_update_cb ota_event_callback = NULL;
+static mid_ota_restart_cb g_restart_cb = NULL;
+
 uint8_t app_ota_init(ota_update_cb ota_cb)
 {
     ota_event_callback = ota_cb;
 }
 
+uint8_t mid_ota_register_callback(mid_ota_restart_cb restart_cb)
+{
+    g_restart_cb = restart_cb;
+}
 
 static uint32_t app_otas_get_curr_firmwave_version(void)
 {
@@ -203,7 +209,7 @@ void __attribute__((weak)) ota_stop(ota_warning_type evt_id)
     os_timer_stop(&os_timer_ota);
     os_timer_destroy(&os_timer_ota);
     ota_deinit(0);
-    ota_init(0);//不断线的情况下，重新初始化
+    ota_init(0);//虏禄露脧脧脽碌脛脟茅驴枚脧脗拢卢脰脴脨脗鲁玫脢录禄炉
     g_otas_get_status = 0;
     if (ota_event_callback != NULL) {
         ota_event_callback(1); //end
@@ -236,6 +242,7 @@ void app_otas_over_reset_dev(void * arg)
 
 void app_otas_reset_delay_start(void)
 {
+    if(g_restart_cb!=NULL)g_restart_cb();
     os_timer_init(&ota_reset_t,app_otas_over_reset_dev,NULL);
     os_timer_start(&ota_reset_t,100,false);
 }
@@ -271,7 +278,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
     at_data_idx++;
     wdt_feed();
 
-    // 支持手机端将包从应用层进行拆分的功能，而不是应用层发长包，L2CAP去拆分。
+    // 脰搂鲁脰脢脰禄煤露脣陆芦掳眉麓脫脫娄脫脙虏茫陆酶脨脨虏冒路脰碌脛鹿娄脛脺拢卢露酶虏禄脢脟脫娄脫脙虏茫路垄鲁陇掳眉拢卢L2CAP脠楼虏冒路脰隆拢
     if(ota_recving_data) {
         // check data idx
         packet_idx = (uint16_t)(p_data[1] << 8)|p_data[0];
@@ -360,7 +367,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             rsp_data_len += sizeof(struct read_data_rsp) + cmd_hdr->cmd.read_data.length;
             if(rsp_data_len > OTAS_NOTIFY_DATA_SIZE)
             {
-                // 数据太长，不能通过notify返回，通知client采用read方式获取
+                // 脢媒戮脻脤芦鲁陇拢卢虏禄脛脺脥篓鹿媒notify路碌禄脴拢卢脥篓脰陋client虏脡脫脙read路陆脢陆禄帽脠隆
                 rsp_data_len = sizeof(struct read_data_rsp) + (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN+OTA_HDR_RESULT_LEN);
                 app_otas_status.read_opcode = OTA_CMD_READ_DATA;
                 app_otas_status.length = cmd_hdr->cmd.read_data.length;
@@ -374,7 +381,7 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
             rsp_data_len += sizeof(struct read_mem_rsp) + cmd_hdr->cmd.read_mem.length;
             if(rsp_data_len > OTAS_NOTIFY_DATA_SIZE)
             {
-                // 数据太长，不能通过notify返回，通知client采用read方式获取
+                // 脢媒戮脻脤芦鲁陇拢卢虏禄脛脺脥篓鹿媒notify路碌禄脴拢卢脥篓脰陋client虏脡脫脙read路陆脢陆禄帽脠隆
                 rsp_data_len = sizeof(struct read_data_rsp) + (OTA_HDR_OPCODE_LEN+OTA_HDR_LENGTH_LEN+OTA_HDR_RESULT_LEN);
                 app_otas_status.read_opcode = OTA_CMD_READ_MEM;
                 app_otas_status.length = cmd_hdr->cmd.read_data.length;
@@ -655,7 +662,6 @@ void app_otas_recv_data(uint8_t conidx,uint8_t *p_data,uint16_t len)
     ota_recover_flash_pin();
     os_free(req);
 }
-
 
 
 uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data)

@@ -163,6 +163,7 @@ struct otas_send_rsp
 };
 
 typedef void(* ota_update_cb)(uint8_t state);
+typedef void(* mid_ota_restart_cb)(void);
 
 void ota_init(uint8_t conidx);
 void ota_deinit(uint8_t conidx);
@@ -171,6 +172,9 @@ uint16_t app_otas_read_data(uint8_t conidx,uint8_t *p_data);
 uint8_t app_otas_get_status(void);
 uint8_t app_ota_init(ota_update_cb ota_cb);
 uint8_t app_otas_get_status(void);
+
+uint8_t mid_ota_register_callback(mid_ota_restart_cb restart_cb);
+
 
 #endif //__OTA_H
 
