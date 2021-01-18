@@ -12,6 +12,8 @@ LINKER_SCRIPT  := ldscript.ld
 MODULES_DIR:=../bin
 INSTALL_LIBS=$(MODULES_DIR)/libs
 INSTALL_INC=$(MODULES_DIR)/include
+SDK_INC=$(MODULES_DIR)/sdk_inc
+SDK_ROOT_LIB:=$(SDK_ROOT)/components/ble/library/libfr8010h_stack.a
 
 SRC_FILES_COMM +=\
 	   #$(MODULES_DIR)/common/hardware.c \
@@ -48,7 +50,7 @@ SRC_FILES += $(SRC_FILES_COMM)
 # Include folders common to all targets
 HAL_RGB_FOLDERS += $(foreach dir, $(SRC_HAL_FILE_DIRS), $(wildcard $(GOVEE_HAL_FILE)$(dir))) 
 
-INC_FOLDERS += \
+SDK_INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/include \
   $(SDK_ROOT)/components/driver/include \
   $(SDK_ROOT)/components/ble/profiles/ble_ota \
@@ -61,7 +63,9 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/include/gatt \
   $(SDK_ROOT)/components/ble/profiles/ble_simple_profile \
 
+INC_FOLDERS +=$(SDK_INC_FOLDERS)
 INC_FOLDERS +=$(HAL_RGB_FOLDERS)
+
 # Libraries common to all targets
 LIB_FILES += -lfr8010h_stack
 
@@ -102,6 +106,7 @@ LDFLAGS += -Wl,--gc-sections
 include $(TEMPLATE_PATH)/Makefile.common
 
 INSTALL_INC_FILES += $(foreach dir, $(SRC_HAL_FILE_DIRS), $(wildcard $(GOVEE_HAL_FILE)$(dir)/*.h)) 
+SDK_INC_FILES += $(foreach dir, $(SDK_INC_FOLDERS), $(wildcard $(dir)/*.h)) 
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 

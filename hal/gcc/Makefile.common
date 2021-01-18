@@ -181,6 +181,8 @@ $(OUTPUT_DIRECTORY)/%/.: | $(OUTPUT_DIRECTORY)
 	$(info Generate: $@)
 	$(NO_ECHO)$(AR)  $(dir $@)lib$(notdir $@) $^
 	$(CP) $(dir $@)lib$(notdir $@) $(INSTALL_LIBS)
+	$(CP) $(SDK_ROOT_LIB) $(INSTALL_LIBS)
+	$(CP) $(SDK_INC_FILES) $(SDK_INC)
 	$(CP) $(INSTALL_INC_FILES)  $(INSTALL_INC)
 	#$(foreach inc_files, $(INSTALL_INC_FILES), $(shell $(CP) $(inc_files) $(INSTALL_INC)))
 
