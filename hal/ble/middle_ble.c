@@ -31,6 +31,8 @@ static LR_handler gt_ble_lr = NULL;
 static int32  g_ble_event = MSG_BLE_EVT_NULL;
 static uint8_t g_ble_conidx = 0;
 static connect_callback s_connect_ble_event = NULL;
+static uint8_t g_ble_update_para = 0;
+static uint32_t g_ble_adv_intv = 300;
 
 /*
  * TYPEDEFS (类型定义)
@@ -437,8 +439,9 @@ static void sp_start_adv(void)
     adv_param.adv_addr_type = GAP_ADDR_TYPE_PUBLIC;
     adv_param.adv_chnl_map = GAP_ADV_CHAN_ALL;
     adv_param.adv_filt_policy = GAP_ADV_ALLOW_SCAN_ANY_CON_ANY;
-    adv_param.adv_intv_min = 300;
-    adv_param.adv_intv_max = 300;
+    if(g_ble_adv_intv<0x20)g_ble_adv_intv=0x20;     // must >=0x20
+    adv_param.adv_intv_min = g_ble_adv_intv;    
+    adv_param.adv_intv_max = g_ble_adv_intv;
 
     gap_set_advertising_param(&adv_param);
 
@@ -467,6 +470,10 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
         case GAP_EVT_ADV_END:
         {
             co_printf("adv_end,status:0x%02x\r\n",p_event->param.adv_end.status);
+            if(g_ble_update_para==1){
+                g_ble_update_para = 0;
+                sp_start_adv();
+            }
             //gap_start_advertising(0);
         }
         break;
@@ -565,6 +572,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
     memcpy(scan_rsp_data,pt_ble->p_ble_resp,pt_ble->ble_resp_len);
     scan_rsp_data_len = pt_ble->ble_resp_len;
 
+    if(pt_ble->ble_adv_intv>0x20)g_ble_adv_intv = pt_ble->ble_adv_intv;
     // Initialize security related settings.
     gap_security_param_t param =
     {
@@ -638,5 +646,14 @@ int8 mid_ble_advertising_switch(int8 on)       //   1 on  0 off
     }
     return 0;
 }
+
+int8 mid_ble_update_time(uint32_t ble_adv_intv)
+{
+    g_ble_update_para = 1;
+    g_ble_adv_intv = ble_adv_intv;
+    gap_stop_advertising();
+    return 0;
+}
+
 
 
