@@ -86,6 +86,6 @@ void mid_ble_gap_update(ble_config_t* pt_ble);
 void mid_ble_ota_init(void);
 void mid_ble_disconnect_gatt(void);
 int8 mid_ble_advertising_switch(int8 on);
-int8 mid_ble_update_time(uint32_t ble_adv_intv);
+int8 mid_ble_update_time(uint32 ble_adv_intv);
 
 #endif /* MIDDLE_BLE_H_ */
