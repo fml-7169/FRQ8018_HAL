@@ -179,6 +179,9 @@ $(OUTPUT_DIRECTORY)/%/.: | $(OUTPUT_DIRECTORY)
 	@echo "----------------------------------------------"
 	@echo "----------------------------------------------"
 	$(info Generate: $@)
+	$(shell mkdir -p $(INSTALL_LIBS))
+	$(shell mkdir -p $(INSTALL_INC))
+	$(shell mkdir -p $(SDK_INC))
 	$(NO_ECHO)$(AR)  $(dir $@)lib$(notdir $@) $^
 	$(CP) $(dir $@)lib$(notdir $@) $(INSTALL_LIBS)
 	$(CP) $(SDK_ROOT_LIB) $(INSTALL_LIBS)
