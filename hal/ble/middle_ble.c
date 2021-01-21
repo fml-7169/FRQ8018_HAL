@@ -325,7 +325,13 @@ int32 mid_ble_write_bytes(uint8* buffer, uint32 length)
     {
         return -1;
     }
-    protocolNotify2App(buffer, length);
+    gatt_ntf_t ntf_att;
+    ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
+    ntf_att.conidx = 0;
+    ntf_att.svc_id = govee_sp_svc_id;
+    ntf_att.data_len = length;
+    ntf_att.p_data = buffer;
+    gatt_notification(ntf_att);
     return 0;
 }
 
