@@ -517,7 +517,7 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
         {
             g_ble_event = MSG_BLE_EVT_CONNECT;
             g_ble_conidx = p_event->param.slave_connect.conidx;
-            gap_conn_param_update(p_event->param.link_update.conidx,20,50,0,3000);
+            gap_conn_param_update(p_event->param.link_update.conidx,20,50,0,300);
             if(s_connect_ble_event!=NULL)s_connect_ble_event(1);
             co_printf("slave[%d],connect. link_num:%d\r\n",p_event->param.slave_connect.conidx,gap_get_connect_num());
         }
