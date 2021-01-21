@@ -72,7 +72,7 @@ static uint8 g_server_uuid[16] = {0x10, 0x19, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08
 #define GOVEE_GATT_SVC1_TX_UUID_128     "\x10\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 #define GOVEE_GATT_SVC1_RX_UUID_128     "\x11\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 
-#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*10)
+#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*20)
 /*********************************************************************
  * Profile Attributes - Table
  * 每一项都是一个attribute的定义。
@@ -193,12 +193,6 @@ static uint8 ble_check_sum(uint8* p_data, uint32 length)
     return check_sum;
 }
 
-
-static int32 ble_msg_write(ble_msg_t* pt_message)
-{
-
-}
-
 uint8 mid_ble_check_sum(uint8* p_data, uint32 length)
 {
     return ble_check_sum(p_data, length);
@@ -271,6 +265,18 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
  */
 
 
+int32 mid_ble_read_bytes(uint8* buffer, uint32 length)
+{
+    uint32 left = Lite_ring_buffer_size_get(gt_ble_lr);
+    if (NULL == buffer || length > left)
+    {
+        return -1;
+    }
+    memset(buffer, 0, length);
+
+    return Lite_ring_buffer_read_data(gt_ble_lr, buffer, length);
+}
+
 int32 mid_ble_msg_read(msg_packet_t* pt_packet)
 {
     int32 data_len = 0;
@@ -281,6 +287,7 @@ int32 mid_ble_msg_read(msg_packet_t* pt_packet)
         //GOVEE_PRINT(LOG_DEBUG, "ble data is not enough.\r\n");
         return -1;
     }
+    memset(pt_packet, 0, sizeof(msg_packet_t));
     Lite_ring_buffer_read_data(gt_ble_lr, (uint8*)pt_packet, sizeof(msg_packet_t));
     return 0;
 }
@@ -311,6 +318,17 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
 }
 
 
+
+int32 mid_ble_write_bytes(uint8* buffer, uint32 length)
+{
+    if (!buffer || length == 0)
+    {
+        return -1;
+    }
+    protocolNotify2App(buffer, length);
+    return 0;
+}
+
 int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
 {
     ble_msg_t t_message;
@@ -329,7 +347,6 @@ int32 mid_ble_msg_write(uint8 head, uint8 type, uint8* p_data, uint32 data_len)
     {
         memcpy(t_message.data, p_data, data_len);
     }
-
     protocolNotify2App((uint8_t *)&t_message,sizeof(ble_msg_t));
     return 1;
 }
@@ -357,19 +374,25 @@ static void sp_gatt_read_cb(uint8_t *p_read, uint16_t *len, uint16_t att_idx)
  */
 static void sp_gatt_write_cb(uint8_t *write_buf, uint16_t len, uint16_t att_idx)        //
 {
-    g_att_idx = att_idx;
-    //co_printf(" %d Write request: len: %d, 0x%x \r\n",att_idx, len);
-    uint16_t i = 0;
-    for(i=0;i<len;i++){
-        //co_printf(" 0x%x\t",write_buf[i]);
-    }
-    msg_packet_t ble_msg;
-    memset(&ble_msg, 0, sizeof(msg_packet_t));
-    ble_msg.t_header.source = MSG_PHONE_BLE;
-    ble_msg.t_header.length = (uint8)len;
-    memcpy(&ble_msg.t_message, write_buf, len);
+    msg_header_t t_header;
 
-    Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&ble_msg, sizeof(msg_packet_t));
+    if (NULL == write_buf)
+    {
+        GOVEE_PRINT(LOG_ERROR, "BLE read data invalid.\r\n");
+        return;
+    }
+
+    if (Lite_ring_buffer_left_get(gt_ble_lr) < sizeof(msg_header_t) + len)
+    {
+        GOVEE_PRINT(LOG_ERROR, "Ble ring buffer full.\r\n");
+        return;
+    }
+
+    memset(&t_header, 0, sizeof(msg_header_t));
+    t_header.source = MSG_PHONE_BLE;
+    t_header.length = len;
+    Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&t_header, sizeof(msg_header_t));
+    Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)write_buf, len);
 }
 
 /*********************************************************************
@@ -494,7 +517,7 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
         {
             g_ble_event = MSG_BLE_EVT_CONNECT;
             g_ble_conidx = p_event->param.slave_connect.conidx;
-            gap_conn_param_update(p_event->param.link_update.conidx,20,50,0,3000);
+            gap_conn_param_update(p_event->param.link_update.conidx,20,50,0,300);
             if(s_connect_ble_event!=NULL)s_connect_ble_event(1);
             co_printf("slave[%d],connect. link_num:%d\r\n",p_event->param.slave_connect.conidx,gap_get_connect_num());
         }
