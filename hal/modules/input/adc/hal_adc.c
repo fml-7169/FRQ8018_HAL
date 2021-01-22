@@ -14,6 +14,7 @@
  */
  
 #include <string.h>
+#include "sys_utils.h"
 #include "driver_adc.h"
 #include "driver_iomux.h"
 #include "driver_system.h"

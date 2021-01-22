@@ -10,6 +10,8 @@
 
 #include "hal_types.h"
 
+#define     _I2C_USE_HARD_      0
+
 int32 mid_i2c_init(uint16 rate);
 void mid_i2c_write(uint8 addr, uint8 reg, uint8* buffer, uint32 len);
 
