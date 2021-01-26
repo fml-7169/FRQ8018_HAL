@@ -14,7 +14,7 @@ pack_file_path_c_tail="/../hal/ota_pack/ota.c"
 
 ota_file_path_h_tail="/components/ble/profiles/ble_ota/ota.h"
 pack_file_path_h_tail="/../hal/ota_pack/ota.h"
-
+hal_build_path="/../hal/gcc"
 cp -r $frq_sdk_path$pack_file_path_c_tail $frq_sdk_path$ota_file_path_c_tail
 cp -r $frq_sdk_path$pack_file_path_h_tail $frq_sdk_path$ota_file_path_h_tail
 
@@ -22,10 +22,12 @@ cp -r $frq_sdk_path$pack_file_path_h_tail $frq_sdk_path$ota_file_path_h_tail
 #build frq
 if [ $# != 1 ];then
     echo "make"
-    make
+    make clean && make
 else
+    echo "build hal"
+    cd $frq_sdk_path$hal_build_path && make clean && make
     echo "make clean && make"
-    make clean&&make
+    cd $prj_path && make clean&&make
 fi
 
 prj_file_os_head="./build/"
