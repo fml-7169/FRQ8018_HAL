@@ -130,11 +130,6 @@ $(eval -include $(DEPENDENCIES)) \
 $(eval INC_PATHS_$(strip $(1)) := \
   $(call get_inc_paths, \
     $(INC_FOLDERS) \
-	$(dir $(foreach find_name, \
-		$(foreach dir_name, \
-			$(1), \
-			$(shell find ../ -name $(dir_name) -type d)),\
-		$(wildcard $(find_name)/*.c)))  \ 
 	$(call target_specific, INC_FOLDERS, $(1))))
 endef
 
