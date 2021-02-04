@@ -1,9 +1,6 @@
 [submodule "FR801xH-SDK"]
 	path = FR801xH-SDK
 	url = https://gitee.com/freqchip/FR801xH-SDK.git
-[submodule "ESD_FR801xH-Govee-Tools"]
-	path = ESD_FR801xH-Govee-Tools
-	url = git@github.com:wenlong-ihoment/ESD_FR801xH-Govee-Tools.git
 [submodule "ESD_FR801xH-Platform"]
 	path = ESD_FR801xH-Platform
 	url = git@github.com:wenlong-ihoment/ESD_FR801xH-Platform.git
