@@ -2,5 +2,5 @@
 	path = FR801xH-SDK
 	url = https://gitee.com/freqchip/FR801xH-SDK.git
 [submodule "ESD_FR801xH-Platform"]
-	path = ESD_FR801xH-Platform
+	path = platform
 	url = git@github.com:wenlong-ihoment/ESD_FR801xH-Platform.git
