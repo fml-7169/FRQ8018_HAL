@@ -9,11 +9,9 @@ GOVEE_HAL:= ..
 GOVEE_HAL_FILE:= ../
 
 LINKER_SCRIPT  := ldscript.ld
-MODULES_DIR:=../../platform
+MODULES_DIR:=../../platform/hal
 INSTALL_LIBS=$(MODULES_DIR)/libs
 INSTALL_INC=$(MODULES_DIR)/include
-SDK_INC=$(MODULES_DIR)/sdk_inc
-SDK_ROOT_LIB:=$(GOVEE_HAL)/ota_pack/libfr8010h_stack.a
 
 SDK_DRIVER_FILE_C=$(foreach dir, $(SDK_DRIVER_FILE), $(wildcard $(GOVEE_HAL_FILE)$(dir)/*.c)) 
 
