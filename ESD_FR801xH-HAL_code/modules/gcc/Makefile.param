@@ -1,7 +1,0 @@
-# support keyboard light and adc
-# modules_name must be is the project's dir .example keyboard=modules/input/keyboard
-MODULES_NAME +=keyboard
-MODULES_NAME +=light
-MODULES_NAME +=adc
-MODULES_NAME +=lcd-ht1621b_4
-MODULES_NAME +=buzzer

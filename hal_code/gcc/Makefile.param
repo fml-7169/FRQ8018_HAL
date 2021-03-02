@@ -1,7 +1,7 @@
 # support keyboard light and adc
 # modules_name must be is the project's dir .example keyboard=modules/input/keyboard
 
-MODULES_NAME +=halrgb
+MODULES_NAME +=govee_hal
 
 SRC_RING_BUFFER:=1
 SRC_HAL_BLE:=1

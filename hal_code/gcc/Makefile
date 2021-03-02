@@ -16,26 +16,12 @@ SDK_INC=$(MODULES_DIR)/sdk_inc
 SDK_ROOT_LIB:=$(GOVEE_HAL)/ota_pack/libfr8010h_stack.a
 
 SDK_DRIVER_FILE_C=$(foreach dir, $(SDK_DRIVER_FILE), $(wildcard $(GOVEE_HAL_FILE)$(dir)/*.c)) 
-SRC_FILES_COMM +=\
-	   #$(MODULES_DIR)/common/hardware.c \
-	   #$(MODULES_DIR)/common/gpio.c 
-INC_COMM += \
-	   #$(MODULES_DIR)/common
 
 SRC_HAL_FILE_C += $(foreach dir, $(SRC_HAL_FILE_DIRS), $(wildcard $(GOVEE_HAL_FILE)$(dir)/*.c)) 
 
 #driver
-SRC_FILES += \
-              $(SDK_ROOT)/components/ble/profiles/ble_ota/ota_service.c \
-              $(SDK_ROOT)/components/ble/profiles/ble_ota/ota.c \
-              $(SDK_ROOT)/components/ble/profiles/ble_simple_profile/simple_gatt_service.c \
-              $(SDK_ROOT)/components/modules/platform/source/exception_handlers.c \
-              $(SDK_ROOT)/components/modules/platform/source/app_boot_vectors.c \
-              $(SDK_ROOT)/components/modules/patch/patch.c 
-
 SDK_ROOT_COMPONENTS_DRIVER=$(SDK_ROOT)/components/driver
 SDK_ROOT_DRIVER_DIRS = $(shell find $(SDK_ROOT_COMPONENTS_DRIVER) -type d)
-SRC_FILES += $(foreach dir, $(SDK_ROOT_DRIVER_DIRS), $(wildcard $(dir)/*.c))
 
 #SDK_ROOT_COMPONENTS_BLE=$(SDK_ROOT)/components/ble
 #SDK_ROOT_BLE_DIRS = $(shell find $(SDK_ROOT_COMPONENTS_BLE) -type d)
@@ -60,11 +46,7 @@ SDK_INC_FOLDERS += \
 
 INC_FOLDERS +=$(SDK_INC_FOLDERS)
 INC_FOLDERS +=$(HAL_RGB_FOLDERS)
-#INC_FOLDERS +=$(SDK_ROOT_BLE_DIRS)
 INC_FOLDERS +=$(SDK_ROOT_DRIVER_DIRS)
-
-# Libraries common to all targets
-LIB_FILES += -lfr8010h_stack
 
 # Optimization flags
 OPT = -Os -g
@@ -94,7 +76,7 @@ ASMFLAGS += -mthumb
 LDFLAGS += $(OPT)
 LDFLAGS += -mthumb
 LDFLAGS += -mcpu=cortex-m3
-LDFLAGS +=  -T$(LINKER_SCRIPT) -L$(SDK_ROOT)/components/ble/library
+LDFLAGS +=  -T$(LINKER_SCRIPT)
 LDFLAGS += $(SDK_ROOT)/components/ble/library/syscall_gcc.txt
 # let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
