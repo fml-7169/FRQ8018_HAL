@@ -42,13 +42,12 @@ void mid_i2c_write(uint8 addr, uint8 reg, uint8* buffer, uint32 len)
     iic_write_bytes(IIC_CHANNEL_1,addr,reg,buffer,(uint16_t)len&0xffff);
 }
 
-
 #else
 
-#define GPIO_I2C_CLK_PORT       GPIO_PORT_A
+#define GPIO_I2C_CLK_PORT       GPIO_PORT_D
 #define GPIO_I2C_CLK_PIN        GPIO_BIT_6
 
-#define GPIO_I2C_DAT_PORT       GPIO_PORT_A   
+#define GPIO_I2C_DAT_PORT       GPIO_PORT_D   
 #define GPIO_I2C_DAT_PIN        GPIO_BIT_7
 
 #define SCL_SET_HIGH()      gpio_set_pin_value(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,1)
