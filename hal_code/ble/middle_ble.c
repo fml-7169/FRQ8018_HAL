@@ -227,10 +227,21 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
         GOVEE_PRINT(LOG_ERROR, "BLE read data invalid.\r\n");
         return 0;
     }
+    memset(&ble_msg, 0, sizeof(msg_packet_t));
+    if(data_len > BLE_PKG_DATA_LEN)
+    {
+        ble_msg.t_header.flag |= MULTI_PACKAGE;
+    }
+
     for(i = 0; i < data_len / BLE_PKG_DATA_LEN; i++)
     {
         memset(&ble_msg, 0, sizeof(msg_packet_t));
         ble_msg.t_header.source = source;
+        if(i == (data_len / BLE_PKG_DATA_LEN -1))
+        {
+            ble_msg.t_header.flag |= MULTI_PACKAGE_END;
+        }
+        ble_msg.t_header.length = BLE_PKG_DATA_LEN;
         memcpy(&ble_msg.t_message, p_data + i * BLE_PKG_DATA_LEN, BLE_PKG_DATA_LEN);
 
         Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&ble_msg, sizeof(msg_packet_t));
@@ -477,7 +488,7 @@ static void sp_start_adv(void)
     // Set advertising data & scan response data
     gap_set_advertising_data(adv_data, adv_data_len);
     gap_set_advertising_rsp_data(scan_rsp_data, scan_rsp_data_len);
-    // Start advertising
+    // Start advertising`
     co_printf("Start advertising...\r\n");
     gap_start_advertising(0);
 }

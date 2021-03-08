@@ -8,6 +8,9 @@
 #define BLE_MSG_NEW_MULT_LEN        17
 #define BLE_UUID_BIT_LEN            128
 
+#define MULTI_PACKAGE               0x01
+#define MULTI_PACKAGE_START         0x02
+#define MULTI_PACKAGE_END           0x04
 
 typedef void (*read_callback)(uint8* p_data, uint32 data_len);
 typedef void (*event_callback)(uint8 type, void* args);
