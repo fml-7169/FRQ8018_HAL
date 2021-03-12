@@ -14,3 +14,7 @@ cd $frq_sdk_path$frq_sdk_patch && sh sdk_patch.sh
 cd $prj_path
 echo "make clean and make"
 make clean && make
+if [ $? -ne "0" ]; then
+    echo "make failed!!! please Check error"
+    exit
+fi
