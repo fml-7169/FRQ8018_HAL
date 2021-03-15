@@ -22,6 +22,22 @@
 
 static LR_handler gt_uart_lr = NULL;
 
+typedef struct _mid_uart0_TypeDef {
+  
+  Pin_Map TX; // 
+  Pin_Map RX;  //
+} mid_uart0_TypeDef;
+
+mid_uart0_TypeDef g_mid_uart0={\
+                            {GPIO_PORT_D,GPIO_BIT_4,PORTD4_FUNC_UART0_RXD},\
+                            {GPIO_PORT_D,GPIO_BIT_5,PORTD5_FUNC_UART0_TXD}}; //default port and 
+
+
+void mid_uart_port_set(Pin_Map tx_pin,Pin_Map rx_pin){
+    g_mid_uart0.TX=tx_pin;
+    g_mid_uart0.RX=rx_pin;
+    return;
+}
 
 static void uart_data_callback(uint8* p_data, uint32 size)
 {
@@ -107,9 +123,11 @@ int32 mid_uart_init(int8 baud_rate)
         GOVEE_PRINT(LOG_ERROR, "Uart ring buffer init failed.\r\n");
         return -1;
     }
-    system_set_port_pull(GPIO_PD4, true);
-    system_set_port_mux(GPIO_PORT_D, GPIO_BIT_4, PORTD4_FUNC_UART0_RXD);
-    system_set_port_mux(GPIO_PORT_D, GPIO_BIT_5, PORTD5_FUNC_UART0_TXD);
+
+    system_set_port_pull(g_mid_uart0.RX.GPIOx, true);
+    system_set_port_mux(g_mid_uart0.RX.GPIOx, g_mid_uart0.RX.GPIO_Pin_x, g_mid_uart0.RX.GPIO_Func);            //RX
+    system_set_port_mux(g_mid_uart0.TX.GPIOx, g_mid_uart0.TX.GPIO_Pin_x, g_mid_uart0.TX.GPIO_Func);          //TX
+
     uart_init(UART0, baud_rate);
     //uart_init_x(gAT_buff_env.uart_param);
     NVIC_EnableIRQ(UART0_IRQn);

@@ -9,4 +9,11 @@ typedef char            int8;
 typedef unsigned char   uint8;
 
 typedef unsigned long long  uint64;
+
+typedef struct _Pin_Map {
+  uint32 GPIOx;
+  uint32 GPIO_Pin_x;
+  uint32 GPIO_Func;
+} Pin_Map;
+
 #endif

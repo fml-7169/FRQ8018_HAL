@@ -23,16 +23,15 @@
 
 typedef struct _mid_i2c_TypeDef {
   
-  I2cPin_Map SCL; // 
-  I2cPin_Map SDA;  //
+  Pin_Map SCL; // 
+  Pin_Map SDA;  //
 } mid_i2c_TypeDef;
 mid_i2c_TypeDef g_mid_i2c={\
                             {GPIO_PORT_D,GPIO_BIT_6,PORTD6_FUNC_I2C1_CLK},\
                             {GPIO_PORT_D,GPIO_BIT_7,PORTD7_FUNC_I2C1_DAT}}; //default port and 
 
 
-
-void mid_i2c_port_set(I2cPin_Map scl_pin,I2cPin_Map sda_pin){
+void mid_i2c_port_set(Pin_Map scl_pin,Pin_Map sda_pin){
     g_mid_i2c.SCL=scl_pin;
     g_mid_i2c.SDA=sda_pin;
     return;
