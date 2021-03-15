@@ -20,7 +20,6 @@ typedef struct
     uart_callback uart_read;
 } uart_config_t;
 
-
 int32 mid_uart_command_get(uint8* buffer);
 int32 mid_uart_data_size(void);
 int mid_uart_data_get(uint8* buffer, uint32 size);

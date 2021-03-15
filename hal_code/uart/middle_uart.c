@@ -17,6 +17,7 @@
 #include "driver_uart.h"
 #include "driver_system.h"
 #include "os_mem.h"
+#include "hci_test.h"
 
 
 static LR_handler gt_uart_lr = NULL;
@@ -73,19 +74,29 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
 
     if(int_id == 0x04 || int_id == 0x0c )   /* Receiver data available or Character time-out indication */
     {
-        while(uart_reg_ram->lsr & 0x01)
-        {
-            Lite_ring_buffer_write_data(gt_uart_lr, (uint8*)&(uart_reg_ram->u1.data), 1);
-            //uart_putc_noint_no_wait(UART1,uart_reg_ram->u1.data);
+        if(hci_test())
+            return;
+        else{
+            while(uart_reg_ram->lsr & 0x01)
+            {
+                Lite_ring_buffer_write_data(gt_uart_lr, (uint8*)&(uart_reg_ram->u1.data), 1);
+                //uart_putc_noint_no_wait(UART1,uart_reg_ram->u1.data);
+            }  
         }
+
     }
     else if(int_id == 0x06)
     {
         uart_reg_ram->lsr = uart_reg_ram->lsr;
     }
-
 }
 
+#if 0
+void mid_uart_isr_handle(uint8* p_data)
+{
+    Lite_ring_buffer_write_data(gt_uart_lr, p_data, 1);
+}
+#endif
 
 int32 mid_uart_init(int8 baud_rate)
 {
