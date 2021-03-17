@@ -45,7 +45,7 @@ mid_uart0_TypeDef g_mid_uart0={\
                             {GPIO_PORT_D,GPIO_BIT_5,PORTD5_FUNC_UART0_TXD}}; //default port and 
 
 
-void mid_uart_port_set(Pin_Map tx_pin,Pin_Map rx_pin){
+void mid_uart0_port_set(Pin_Map tx_pin,Pin_Map rx_pin){
     g_mid_uart0.TX=tx_pin;
     g_mid_uart0.RX=rx_pin;
     return;
