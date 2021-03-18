@@ -376,15 +376,15 @@ static int user_at_func(os_event_t *param)
                 {
                     for(;i < 0x0f;i++)
                     {
-                        for(j = 0;j < (i+1);j++)
-                            adjust_num += freq_adjust_tab[j];
+                        //for(j = 0;j < (i+1);j++)
+                            adjust_num += freq_adjust_tab[i];
                         if(abs(adjust_num-buff[2]) < 10) // 10k
                         {
                             cur_freq_adjust_val = i+1;
                             break;
                         }
-                        else
-                            adjust_num = 0;
+//                        else
+//                            adjust_num = 0;
                     } 
                 }
                 else
