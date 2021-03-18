@@ -690,15 +690,18 @@ void lcd_tile(int row,int type,int enable){
 	 }
 	else if(type == LCD_TYPE_DEFAULT){
 	 if(enable){
-		 lcd_set_seg(HT_P5_LCD);		 
+		 lcd_set_seg(HT_P5_LCD);
+		 lcd_set_seg(HT_P2_LCD);	
 	 	 lcd_set_seg(HT_S2_LCD);
 	 	 lcd_set_seg(HT_S5_LCD);	
 	 	}
 	 else{
 
-		 lcd_clear_seg(HT_P5_LCD);		 
+		 lcd_clear_seg(HT_P5_LCD); 
+		 lcd_clear_seg(HT_P2_LCD);		
 	 	 lcd_clear_seg(HT_S2_LCD);
-	 	 lcd_clear_seg(HT_S5_LCD);	}
+	 	 lcd_clear_seg(HT_S5_LCD);	
+	 }
 	 }
 	sendDataToLcdDriver();
     

@@ -79,15 +79,15 @@ static int adc_read(struct adc_client *client, unsigned int ch)
     }
 	//ret = adc_start(client);
 	if(client->channel &ch){
-        if(ch == 0x8){
-            system_set_port_mux(GPIO_PORT_D,GPIO_BIT_1,PORT_FUNC_GPIO);
-            gpio_set_dir(GPIO_PORT_D,GPIO_BIT_1,GPIO_DIR_OUT);
-            gpio_set_pin_value(GPIO_PORT_D,GPIO_BIT_1,1);            
+        if(ch == 0x4){
+            system_set_port_mux(GPIO_PORT_A,GPIO_BIT_5,PORT_FUNC_GPIO);
+            gpio_set_dir(GPIO_PORT_A,GPIO_BIT_5,GPIO_DIR_OUT);
+            gpio_set_pin_value(GPIO_PORT_A,GPIO_BIT_5,1);            
             co_delay_100us(50);
         }        
 	    adc_get_result(ADC_TRANS_SOURCE_PAD, ch, &adc_value);
-        if(ch == 0x8){
-            gpio_set_pin_value(GPIO_PORT_D,GPIO_BIT_1,0);
+        if(ch == 0x4){
+            gpio_set_pin_value(GPIO_PORT_A,GPIO_BIT_5,0);
         }
         client->result=adc_value*client->ref/ACQ_RANGE;
         DEV_DB("adc channel[%d] result %d,ref %d,acq range %d\r\n",ch,client->result,client->ref,ACQ_RANGE);
