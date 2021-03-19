@@ -235,7 +235,7 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
 
     for(i = 0; i < data_len / BLE_PKG_DATA_LEN; i++)
     {
-        memset(&ble_msg, 0, sizeof(msg_packet_t));
+        memset(&ble_msg.t_message, 0, sizeof(ble_msg_t));
         ble_msg.t_header.source = source;
         if(i == (data_len / BLE_PKG_DATA_LEN -1))
         {
