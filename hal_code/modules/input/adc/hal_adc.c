@@ -79,15 +79,21 @@ static int adc_read(struct adc_client *client, unsigned int ch)
     }
 	//ret = adc_start(client);
 	if(client->channel &ch){
-        if(ch == 0x4){
-            system_set_port_mux(GPIO_PORT_A,GPIO_BIT_5,PORT_FUNC_GPIO);
-            gpio_set_dir(GPIO_PORT_A,GPIO_BIT_5,GPIO_DIR_OUT);
-            gpio_set_pin_value(GPIO_PORT_A,GPIO_BIT_5,1);            
+        if(ch == client->adc_power_en.channel){
+            system_set_port_mux(client->adc_power_en.GPIOx,\
+                    client->adc_power_en.GPIO_Pin_x,\
+                    client->adc_power_en.GPIO_FUNC);
+            gpio_set_dir(client->adc_power_en.GPIOx,\
+                    client->adc_power_en.GPIO_Pin_x,\
+                    GPIO_DIR_OUT);
+            gpio_set_pin_value(client->adc_power_en.GPIOx,\
+                    client->adc_power_en.GPIO_Pin_x,1);            
             co_delay_100us(50);
         }        
 	    adc_get_result(ADC_TRANS_SOURCE_PAD, ch, &adc_value);
-        if(ch == 0x4){
-            gpio_set_pin_value(GPIO_PORT_A,GPIO_BIT_5,0);
+        if(ch == client->adc_power_en.channel){
+            gpio_set_pin_value(client->adc_power_en.GPIOx,\
+                    client->adc_power_en.GPIO_Pin_x,0);            
         }
         client->result=adc_value*client->ref/ACQ_RANGE;
         DEV_DB("adc channel[%d] result %d,ref %d,acq range %d\r\n",ch,client->result,client->ref,ACQ_RANGE);
@@ -129,6 +135,15 @@ void adc_pin_config(void *pin_map,int pin_map_len,void *device)
     return;
 }
 
+int adc_power_config(struct adc_client *client,struct adc_power_sw *adc_en)
+{
+    if(client == NULL){
+        DEV_ERR("input dev is null\r\n");
+        return -1;
+    }
+    client->adc_power_en=*adc_en;
+    return 0;
+}
 
 static int adc_open(const struct hw_module_t* module, char const* name,
         struct hw_device_t** device)
@@ -144,6 +159,7 @@ static int adc_open(const struct hw_module_t* module, char const* name,
     dev->cli.read=(int (*)(void *,unsigned int))adc_read;
     dev->cli.stop=(int (*)(void *))adc_stop;
     dev->cli.pin_config=adc_pin_config;
+    dev->cli.adc_power_config=(int (*)(void *,struct adc_power_sw *))adc_power_config;
     *device = (struct hw_device_t*)dev;
     return 0;
 }

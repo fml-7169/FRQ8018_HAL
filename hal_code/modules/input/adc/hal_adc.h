@@ -16,6 +16,13 @@
 #define ADC_HARDWARE_MODULE_ID "adc"
 #include "hardware.h"   
 
+typedef struct adc_power_sw {
+    uint32_t channel;
+    uint32_t GPIOx;
+    uint32_t GPIO_Pin_x;
+    uint32_t GPIO_FUNC;
+}adc_power_sw;
+struct adc_power_sw;
 struct adc_client;
 struct adc_client {
 	unsigned int		nr_samples;
@@ -31,7 +38,10 @@ struct adc_client {
                     void* device);    
     int (*read)(void *pdev, unsigned int ch);    
     int (*stop)(void *pdev);
+    int (*adc_power_config)(void *pdev,struct adc_power_sw *adc_en);
+    struct adc_power_sw adc_power_en;
 };
+
 
 typedef struct adc_device_t {    
     struct hw_device_t common;    
