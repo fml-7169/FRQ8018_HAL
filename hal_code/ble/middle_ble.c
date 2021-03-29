@@ -72,7 +72,7 @@ static uint8 g_server_uuid[16] = {0x10, 0x19, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08
 #define GOVEE_GATT_SVC1_TX_UUID_128     "\x10\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 #define GOVEE_GATT_SVC1_RX_UUID_128     "\x11\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 
-#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*20)
+#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*24)
 /*********************************************************************
  * Profile Attributes - Table
  * 每一项都是一个attribute的定义。

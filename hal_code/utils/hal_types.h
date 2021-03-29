@@ -16,4 +16,6 @@ typedef struct _Pin_Map {
   uint32 GPIO_Func;
 } Pin_Map;
 
+#define PIN_PORT_PIN(GPIO,PIN)  ((uint32)1<<((GPIO*8)+PIN))
+
 #endif

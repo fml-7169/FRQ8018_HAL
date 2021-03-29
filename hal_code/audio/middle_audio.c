@@ -25,7 +25,7 @@
 #include "Lite-Rbuffer.h"
 
 #define I2S_IRQ_PRIO    4
-#define AUDIO_DATA_BUFFER_SIZE      2048
+#define AUDIO_DATA_BUFFER_SIZE      1024
 
 #define codec_write(addr, data)         frspim_wr(FR_SPI_CODEC_CHAN, addr, 1, (uint32_t)data)
 
