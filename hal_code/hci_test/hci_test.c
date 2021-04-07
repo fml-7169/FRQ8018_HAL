@@ -720,6 +720,7 @@ uint8_t dev_check_hci_test_mode(void)
 
 void hci_test_init(void)
 {
+
     system_set_port_pull(GPIO_PA2, true);
     system_set_port_mux(GPIO_PORT_A, GPIO_BIT_2, PORTA2_FUNC_UART0_RXD);
     system_set_port_mux(GPIO_PORT_A, GPIO_BIT_3, PORTA3_FUNC_UART0_TXD);
@@ -732,8 +733,7 @@ void hci_test_init(void)
     NVIC_EnableIRQ(UART0_IRQn);
     os_timer_init(&evt_at_timeout,evt_at_timeout_handle,NULL);
     user_at_id = os_task_create(user_at_func);
-    
-    
+    mid_uart_for_hci_test();
 }
 
 

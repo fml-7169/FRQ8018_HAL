@@ -27,6 +27,7 @@ typedef struct
     uart_callback uart_read;
 } uart_config_t;
 
+void mid_uart_for_hci_test(void);
 int32 mid_uart_data_size(uint8 u_id);
 int mid_uart_data_get(uint8 u_id,uint8* buffer, uint32 size);
 int32 mid_uart_data_send(uint8 u_id,uint8* p_data, uint32 size);
