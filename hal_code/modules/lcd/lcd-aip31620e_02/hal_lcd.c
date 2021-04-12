@@ -501,7 +501,7 @@ void lcd_battery_power(const unsigned char electry)
     assert_param(__lcd != NULL);
 	unsigned char electry_level=0;
 	unsigned char i = 0;
-	unsigned char electry_icon[BATT_LEVEL]={HT_Z_LCD,HT_Z1_LCD,HT_Z2_LCD,HT_Z3_LCD,HT_Z4_LCD};    
+	unsigned char electry_icon[BATT_LEVEL]={HT_Z_LCD,HT_Z4_LCD,HT_Z3_LCD,HT_Z2_LCD,HT_Z1_LCD};    
 	if(electry<=10){
 		electry_level = 0;
 	}
