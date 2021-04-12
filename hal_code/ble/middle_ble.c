@@ -72,7 +72,7 @@ static uint8 g_server_uuid[16] = {0x10, 0x19, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08
 #define GOVEE_GATT_SVC1_TX_UUID_128     "\x10\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 #define GOVEE_GATT_SVC1_RX_UUID_128     "\x11\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 
-#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*20)
+#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*24)
 /*********************************************************************
  * Profile Attributes - Table
  * 每一项都是一个attribute的定义。
@@ -235,7 +235,7 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
 
     for(i = 0; i < data_len / BLE_PKG_DATA_LEN; i++)
     {
-        memset(&ble_msg, 0, sizeof(msg_packet_t));
+        memset(&ble_msg.t_message, 0, sizeof(ble_msg_t));
         ble_msg.t_header.source = source;
         if(i == (data_len / BLE_PKG_DATA_LEN -1))
         {

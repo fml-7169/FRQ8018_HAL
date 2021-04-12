@@ -20,6 +20,23 @@
 #include "middle_i2c.h"
 #include "driver_gpio.h"
 
+
+typedef struct _mid_i2c_TypeDef {
+  
+  Pin_Map SCL; // 
+  Pin_Map SDA;  //
+} mid_i2c_TypeDef;
+mid_i2c_TypeDef g_mid_i2c={\
+                            {GPIO_PORT_D,GPIO_BIT_6,PORTD6_FUNC_I2C1_CLK},\
+                            {GPIO_PORT_D,GPIO_BIT_7,PORTD7_FUNC_I2C1_DAT}}; //default port and 
+
+
+void mid_i2c_port_set(Pin_Map scl_pin,Pin_Map sda_pin){
+    g_mid_i2c.SCL=scl_pin;
+    g_mid_i2c.SDA=sda_pin;
+    return;
+}
+
 #if _I2C_USE_HARD_
 /*
 PD6     SCL
@@ -28,10 +45,10 @@ PD7     SDA
 
 int32 mid_i2c_init(uint16 rate)
 {
-    system_set_port_pull(GPIO_PD6, 1);
-    system_set_port_pull(GPIO_PD7, 1);
-    system_set_port_mux(GPIO_PORT_D, GPIO_BIT_6, PORTD6_FUNC_I2C1_CLK);            //SCL
-    system_set_port_mux(GPIO_PORT_D, GPIO_BIT_7, PORTD7_FUNC_I2C1_DAT);            //SDA
+    system_set_port_pull(g_mid_i2c.SCL.GPIOx, 1);
+    system_set_port_pull(g_mid_i2c.SDA.GPIOx, 1);
+    system_set_port_mux(g_mid_i2c.SCL.GPIOx, g_mid_i2c.SCL.GPIO_Pin_x, g_mid_i2c.SCL.GPIO_Func);            //SCL
+    system_set_port_mux(g_mid_i2c.SDA.GPIOx, g_mid_i2c.SDA.GPIO_Pin_x, g_mid_i2c.SDA.GPIO_Func);            //SDA
 
     iic_init(IIC_CHANNEL_1,rate,0x70);
     return 0;
@@ -44,23 +61,23 @@ void mid_i2c_write(uint8 addr, uint8 reg, uint8* buffer, uint32 len)
 
 #else
 
-#define GPIO_I2C_CLK_PORT       GPIO_PORT_D
-#define GPIO_I2C_CLK_PIN        GPIO_BIT_6
+//#define GPIO_I2C_CLK_PORT       GPIO_PORT_D
+//#define GPIO_I2C_CLK_PIN        GPIO_BIT_6
 
-#define GPIO_I2C_DAT_PORT       GPIO_PORT_D   
-#define GPIO_I2C_DAT_PIN        GPIO_BIT_7
+//#define GPIO_I2C_DAT_PORT       GPIO_PORT_D   
+//#define GPIO_I2C_DAT_PIN        GPIO_BIT_7
 
-#define SCL_SET_HIGH()      gpio_set_pin_value(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,1)
-#define SCL_SET_LOW()       gpio_set_pin_value(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,0)
-#define SCL_GET_VAL()       gpio_get_pin_value(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN)
-#define SCL_SET_OUTPUT()    gpio_set_dir(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,GPIO_DIR_OUT)
-#define SCL_SET_INPUT()     gpio_set_dir(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,GPIO_DIR_IN)
+#define SCL_SET_HIGH()      gpio_set_pin_value(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,1)
+#define SCL_SET_LOW()       gpio_set_pin_value(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,0)
+#define SCL_GET_VAL()       gpio_get_pin_value(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x)
+#define SCL_SET_OUTPUT()    gpio_set_dir(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,GPIO_DIR_OUT)
+#define SCL_SET_INPUT()     gpio_set_dir(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,GPIO_DIR_IN)
 
-#define SDA_SET_HIGH()      gpio_set_pin_value(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,1)
-#define SDA_SET_LOW()       gpio_set_pin_value(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,0)
-#define SDA_GET_VAL()       gpio_get_pin_value(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN)
-#define SDA_SET_OUTPUT()    gpio_set_dir(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,GPIO_DIR_OUT)
-#define SDA_SET_INPUT()     gpio_set_dir(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,GPIO_DIR_IN)
+#define SDA_SET_HIGH()      gpio_set_pin_value(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,1)
+#define SDA_SET_LOW()       gpio_set_pin_value(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,0)
+#define SDA_GET_VAL()       gpio_get_pin_value(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x)
+#define SDA_SET_OUTPUT()    gpio_set_dir(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,GPIO_DIR_OUT)
+#define SDA_SET_INPUT()     gpio_set_dir(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,GPIO_DIR_IN)
 
 #define I2C_DELAY()         {__NOP(); __NOP();}//{__NOP();__NOP();__NOP();__NOP();}
 
@@ -348,13 +365,15 @@ void drv_i2c_read_gpio(uint8 i2cAddr, uint8 reg, uint8 *pBuf, uint8 len)
 #define PORT_FUNC_GPIO 0x00
 int32 mid_i2c_init(uint16 rate)
 {
-    system_set_port_mux(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,PORT_FUNC_GPIO);
-    gpio_set_dir(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,GPIO_DIR_OUT);
-    gpio_set_pin_value(GPIO_I2C_CLK_PORT,GPIO_I2C_CLK_PIN,1);   
+    system_set_port_mux(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,PORT_FUNC_GPIO);
+    gpio_set_dir(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,GPIO_DIR_OUT);
+    system_set_port_pull(PIN_PORT_PIN(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x),1);
+    gpio_set_pin_value(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,1);   
 
-    system_set_port_mux(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,PORT_FUNC_GPIO);
-    gpio_set_dir(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,GPIO_DIR_OUT);
-    gpio_set_pin_value(GPIO_I2C_DAT_PORT,GPIO_I2C_DAT_PIN,1);   
+    system_set_port_mux(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,PORT_FUNC_GPIO);
+    gpio_set_dir(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,GPIO_DIR_OUT);
+    system_set_port_pull(PIN_PORT_PIN(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x),1);
+    gpio_set_pin_value(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,1);   
     return 0;
 }
 

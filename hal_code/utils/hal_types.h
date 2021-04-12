@@ -9,4 +9,13 @@ typedef char            int8;
 typedef unsigned char   uint8;
 
 typedef unsigned long long  uint64;
+
+typedef struct _Pin_Map {
+  uint32 GPIOx;
+  uint32 GPIO_Pin_x;
+  uint32 GPIO_Func;
+} Pin_Map;
+
+#define PIN_PORT_PIN(GPIO,PIN)  ((uint32)1<<((GPIO*8)+PIN))
+
 #endif

@@ -25,7 +25,7 @@
 #include "Lite-Rbuffer.h"
 
 #define I2S_IRQ_PRIO    4
-#define AUDIO_DATA_BUFFER_SIZE      2048
+#define AUDIO_DATA_BUFFER_SIZE      1024
 
 #define codec_write(addr, data)         frspim_wr(FR_SPI_CODEC_CHAN, addr, 1, (uint32_t)data)
 
@@ -75,6 +75,7 @@ int32 mid_audio_init(void)
     pmu_set_aldo_voltage(PMU_ALDO_MODE_BYPASS, 0x00);
     pmu_codec_power_enable();
     codec_adc_init(CODEC_SAMPLE_RATE_8000);
+    codec_write(0x18, 0x1C);//PGA  P/N exchange, P enable  N enable
     codec_enable_adc();
     //codec_enable_dac();
     i2s_init(I2S_DIR_RX,8000,1);
@@ -94,7 +95,7 @@ int32 mid_audio_init(void)
 
 void audio_sensitivity(int level){
     if(level > 100)level = 100;
-    gMaxGain_sensitive = level*0x25/100;
+    gMaxGain_sensitive = level*0x3F/100;
     gGain = gMaxGain_sensitive;
     codec_write(0x19, (unsigned char)gGain);
 }
