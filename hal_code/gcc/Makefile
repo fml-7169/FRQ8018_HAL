@@ -41,6 +41,7 @@ SDK_INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/include/gap \
   $(SDK_ROOT)/components/ble/include/gatt \
   $(SDK_ROOT)/components/ble/profiles/ble_simple_profile \
+  $(SDK_ROOT)/components/ble/include/mesh \
 
 INC_FOLDERS +=$(SDK_INC_FOLDERS)
 INC_FOLDERS +=$(HAL_RGB_FOLDERS)
