@@ -441,7 +441,7 @@ static uint16_t govee_sp_gatt_msg_handler(gatt_msg_t *p_msg)
             {
                 govee_conn_flag = 1;
                 govee_conidx = p_msg->conn_idx;
-                mesh_stop_prov_link_timeout_timer();
+                //mesh_stop_prov_link_timeout_timer();
             }
         	      
             sp_gatt_write_cb((uint8_t *)(p_msg->param.msg.p_msg_data), (p_msg->param.msg.msg_len), p_msg->att_idx);
