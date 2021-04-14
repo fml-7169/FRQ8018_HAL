@@ -203,7 +203,7 @@ void HT_I2cPin_Init(void)                       /* -- adapt the init for your uC
 #endif
 
 
-void delay(void)					//几us的延时
+static void delay(void)					//几us的延时
 {
 	unsigned char i = 2;
 	while(i--);
