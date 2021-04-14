@@ -14,7 +14,6 @@
 #include "os_mem.h"
 #include "sys_utils.h"
 #include "jump_table.h"
-
 #include "driver_plf.h"
 #include "driver_system.h"
 #include "driver_i2s.h"
@@ -234,31 +233,49 @@ static int dev_flash_read_data(uint32_t addr, uint8_t* data, uint32_t size)
 
 static void dev_freq_adjust_store(uint8_t adjust_val)
 {
-    uint8_t store_data[9] = {'f','r','e','q',0xff,'c','h','i','p'};
+    uint8_t store_data[10] = {'f','r','e','q',0xff,0xff,'c','h','i','p'};
     
     store_data[4] = adjust_val;
+    store_data[5] = adjust_val^0xff;
     flash_OTP_erase(0x1000);
     flash_OTP_write(0x1000,sizeof(store_data),store_data);
+    flash_OTP_erase(0x2000);
+    flash_OTP_write(0x2000,sizeof(store_data),store_data);
 }
 
 void dev_freq_adjust_check(void)
 {
-    uint8_t get_data[9] = {0};
+    uint8_t get_data[10] = {0};
+    uint8_t get_data1[10] = {0};
+    uint8_t check_temp = 0;
     flash_OTP_read(0x1000,sizeof(get_data),get_data);
-    
-    if(!memcmp(get_data,"freq",4) && !memcmp(&get_data[5],"chip",4))
+    flash_OTP_read(0x2000,sizeof(get_data1),get_data1);
+
+    if(!memcmp(get_data,"freq",4) && !memcmp(&get_data[6],"chip",4))
     {
-        cur_freq_adjust_val = get_data[4];
-        co_printf("=freq aujust=%d\r\n",cur_freq_adjust_val);
-        if(cur_freq_adjust_val)
+//        uart_putc_noint_no_wait(UART1,0xf0);
+        check_temp = get_data[4]^0xff;
+        if(check_temp == get_data[5])
+            cur_freq_adjust_val = get_data[4];
+    }
+    else if(!memcmp(get_data1,"freq",4) && !memcmp(&get_data1[6],"chip",4))
+    {
+//        uart_putc_noint_no_wait(UART1,0xf1);
+        check_temp = get_data1[4]^0xff;
+        if(check_temp == get_data1[5])
+            cur_freq_adjust_val = get_data1[4];
+    }
+    
+    if(cur_freq_adjust_val && (cur_freq_adjust_val < 0x10))
+    {
+        //co_printf("=freq aujust=%d\r\n",cur_freq_adjust_val);
+        //uart_putc_noint_no_wait(UART1,cur_freq_adjust_val);
+        if(cur_freq_adjust_val < 8)
+            ool_write(0x10,cur_freq_adjust_val);
+        else
         {
-            if(cur_freq_adjust_val < 8)
-                ool_write(0x10,cur_freq_adjust_val);
-            else
-            {
-                ool_write(0x10,7);
-                ool_write(0x10,cur_freq_adjust_val);
-            }
+            ool_write(0x10,7);
+            ool_write(0x10,cur_freq_adjust_val);
         }
     }
 }
@@ -267,13 +284,13 @@ static int user_at_func(os_event_t *param)
 {
     uint8_t rsp_data[32] = {0x01,0xE0,0xFC};
     uint8_t *buff = param->param;
+    uint8_t i = 0;
     
     switch(buff[0])
     {
         case MAC_ADDR_WRITE:
-            flash_erase(HCI_TEST_MAC_ADDR,0);
-//            flash_write(HCI_TEST_MAC_ADDR,6,buff+1);
-            dev_flash_write_data(HCI_TEST_MAC_ADDR,buff+1,6);
+//            flash_erase(HCI_TEST_MAC_ADDR,0);
+//            dev_flash_write_data(HCI_TEST_MAC_ADDR,buff+1,6);
             rsp_data[3] = 7;
             rsp_data[4] = 0x60;
             memcpy(rsp_data+5,buff+1,6);
@@ -281,12 +298,16 @@ static int user_at_func(os_event_t *param)
         break;
         case MAC_ADDR_READ:
         {
-            uint8_t mac_addr[6];
+//            uint8_t mac_addr[6];
 //            flash_read(HCI_TEST_MAC_ADDR,6,mac_addr);
-            dev_flash_read_data(HCI_TEST_MAC_ADDR,mac_addr,6);
+//            dev_flash_read_data(HCI_TEST_MAC_ADDR,mac_addr,6);
+            mac_addr_t addr;
+            gap_address_get(&addr);
             rsp_data[3] = 7;
             rsp_data[4] = 0x61;
-            memcpy(rsp_data+5,mac_addr,6);
+            for(i = 0;i < 6;i++)
+                rsp_data[5+i] = addr.addr[5-i];
+            //memcpy(rsp_data+5,addr.addr,6);
             uart_write(UART0,rsp_data,(rsp_data[3]+4));
         }
         break;
@@ -332,7 +353,7 @@ static int user_at_func(os_event_t *param)
         case EARSE_TESt:
         {
             uint8_t buff1[7]={0};
-            flash_read(PCB_TEST,7,buff1);
+//            flash_read(PCB_TEST,7,buff1);
             //printf("%s\r\n",buff);
            // flash_erase(PCB_TEST,0);
         }
@@ -371,7 +392,7 @@ static int user_at_func(os_event_t *param)
             // {10,9,9,8,7,7,6,6,6,6,6,5,5,5,5};
             if((buff[1] <= 1) && (buff[2] <= 100))
             {
-                uint8_t i = cur_freq_adjust_val,adjust_num = 0,j = 0;
+                uint8_t i = cur_freq_adjust_val,adjust_num = 0;//,j = 0;
                 if(buff[1])
                 {
                     for(;i < 0x0f;i++)
@@ -699,6 +720,7 @@ uint8_t dev_check_hci_test_mode(void)
 
 void hci_test_init(void)
 {
+
     system_set_port_pull(GPIO_PA2, true);
     system_set_port_mux(GPIO_PORT_A, GPIO_BIT_2, PORTA2_FUNC_UART0_RXD);
     system_set_port_mux(GPIO_PORT_A, GPIO_BIT_3, PORTA3_FUNC_UART0_TXD);
@@ -711,8 +733,7 @@ void hci_test_init(void)
     NVIC_EnableIRQ(UART0_IRQn);
     os_timer_init(&evt_at_timeout,evt_at_timeout_handle,NULL);
     user_at_id = os_task_create(user_at_func);
-    
-    
+    mid_uart_for_hci_test();
 }
 
 

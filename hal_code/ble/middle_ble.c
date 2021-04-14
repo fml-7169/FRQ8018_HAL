@@ -13,6 +13,7 @@
 #include "middle_ble.h"
 #include "ota_service.h"
 #include "govee_utils.h"
+#include "mesh_api.h"
 
 #define GATT_CHAR1_VALUE_LEN  20
 #define GATT_CHAR2_VALUE_LEN  20
@@ -33,7 +34,8 @@ static uint8_t g_ble_conidx = 0;
 static connect_callback s_connect_ble_event = NULL;
 static uint8_t g_ble_update_para = 0;
 static uint32_t g_ble_adv_intv = 300;
-
+static uint8_t govee_conidx = 0;
+static uint8 govee_conn_flag = 0;
 /*
  * TYPEDEFS (类型定义)
  */
@@ -72,7 +74,7 @@ static uint8 g_server_uuid[16] = {0x10, 0x19, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08
 #define GOVEE_GATT_SVC1_TX_UUID_128     "\x10\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 #define GOVEE_GATT_SVC1_RX_UUID_128     "\x11\x2B\x0D\x0C\x0B\x0A\x09\x08\x07\x06\x05\x04\x03\x02\x01\x00"
 
-#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*20)
+#define BLE_GATT_MSG_BUFFER_SIZE    (sizeof(msg_packet_t)*24)
 /*********************************************************************
  * Profile Attributes - Table
  * 每一项都是一个attribute的定义。
@@ -176,6 +178,10 @@ static uint8_t g_att_idx = 0;
  */
 static void sp_start_adv(void);
 
+uint8 govee_conn_flag_get(void)
+{
+    return govee_conn_flag;
+}
 
 static uint8 ble_check_sum(uint8* p_data, uint32 length)
 {
@@ -318,14 +324,14 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
 
     ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
     //co_printf("ntf_att.att_idx=%x\r\n",ntf_att.att_idx);
-    ntf_att.conidx = 0;
+    ntf_att.conidx = govee_conidx;
     ntf_att.svc_id = govee_sp_svc_id;
     ntf_att.data_len = data_len;
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
 
-    //co_printf("ble send : ");
-    //govee_utils_data_print(send_data, data_len, 0);
+    co_printf("ble send[%d]: ", govee_conidx);
+    govee_utils_data_print(send_data, data_len, 0);
 }
 
 
@@ -338,7 +344,7 @@ int32 mid_ble_write_bytes(uint8* buffer, uint32 length)
     }
     gatt_ntf_t ntf_att;
     ntf_att.att_idx = GOVEE_GATT_IDX_CHAR1_VALUE;
-    ntf_att.conidx = 0;
+    ntf_att.conidx = govee_conidx;
     ntf_att.svc_id = govee_sp_svc_id;
     ntf_att.data_len = length;
     ntf_att.p_data = buffer;
@@ -431,7 +437,14 @@ static uint16_t govee_sp_gatt_msg_handler(gatt_msg_t *p_msg)
             break;
 
         case GATTC_MSG_WRITE_REQ:
-            sp_gatt_write_cb((uint8_t*)(p_msg->param.msg.p_msg_data), (p_msg->param.msg.msg_len), p_msg->att_idx);
+            if(p_msg->att_idx == GOVEE_GATT_IDX_CHAR1_CFG)
+            {
+                govee_conn_flag = 1;
+                govee_conidx = p_msg->conn_idx;
+                //mesh_stop_prov_link_timeout_timer();
+            }
+        	      
+            sp_gatt_write_cb((uint8_t *)(p_msg->param.msg.p_msg_data), (p_msg->param.msg.msg_len), p_msg->att_idx);
             break;
         default:
             break;
@@ -542,6 +555,10 @@ static void govee_gap_evt_cb(gap_event_t *p_event)
 
         case GAP_EVT_DISCONNECT:
         {
+            if(govee_conidx == p_event->param.disconnect.conidx)
+            {
+                govee_conn_flag = 0;
+            }
             g_ble_event = MSG_BLE_EVT_DISCONNECT;
             g_ble_conidx = 0;
             if(s_connect_ble_event!=NULL)s_connect_ble_event(0);
@@ -635,6 +652,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
 
     gap_set_cb_func(govee_gap_evt_cb);
 
+    show_ke_malloc();
     gap_bond_manager_init(BLE_BONDING_INFO_SAVE_ADDR, BLE_REMOTE_SERVICE_SAVE_ADDR, 8, true);
     gap_bond_manager_delete_all();
 
@@ -656,7 +674,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
 
 void mid_ble_disconnect_gatt(void)
 {
-    gap_disconnect_req(g_ble_conidx);
+    gap_disconnect_req(govee_conidx);
 }
 
 int32 mid_ble_mac_get(uint8* ble_mac)

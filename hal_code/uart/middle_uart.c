@@ -200,3 +200,8 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
     uart_write(uart_config[u_id].uart_port,"hello,world",11);
     return 0;
 }
+
+void mid_uart_for_hci_test(void)
+{
+    return;
+}

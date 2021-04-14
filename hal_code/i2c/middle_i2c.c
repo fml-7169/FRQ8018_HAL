@@ -48,7 +48,7 @@ int32 mid_i2c_init(uint16 rate)
     system_set_port_pull(g_mid_i2c.SCL.GPIOx, 1);
     system_set_port_pull(g_mid_i2c.SDA.GPIOx, 1);
     system_set_port_mux(g_mid_i2c.SCL.GPIOx, g_mid_i2c.SCL.GPIO_Pin_x, g_mid_i2c.SCL.GPIO_Func);            //SCL
-    system_set_port_mux(g_mid_i2c.SDA.GPIOx, g_mid_i2c.SDA.GPIO_Pin_x, g_mid_i2c.SCL.GPIO_Func);            //SDA
+    system_set_port_mux(g_mid_i2c.SDA.GPIOx, g_mid_i2c.SDA.GPIO_Pin_x, g_mid_i2c.SDA.GPIO_Func);            //SDA
 
     iic_init(IIC_CHANNEL_1,rate,0x70);
     return 0;
@@ -367,10 +367,12 @@ int32 mid_i2c_init(uint16 rate)
 {
     system_set_port_mux(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,PORT_FUNC_GPIO);
     gpio_set_dir(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,GPIO_DIR_OUT);
+    system_set_port_pull(PIN_PORT_PIN(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x),1);
     gpio_set_pin_value(g_mid_i2c.SCL.GPIOx,g_mid_i2c.SCL.GPIO_Pin_x,1);   
 
     system_set_port_mux(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,PORT_FUNC_GPIO);
     gpio_set_dir(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,GPIO_DIR_OUT);
+    system_set_port_pull(PIN_PORT_PIN(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x),1);
     gpio_set_pin_value(g_mid_i2c.SDA.GPIOx,g_mid_i2c.SDA.GPIO_Pin_x,1);   
     return 0;
 }
