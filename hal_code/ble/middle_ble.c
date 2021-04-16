@@ -652,7 +652,6 @@ int32 mid_ble_init(ble_config_t* pt_ble)
 
     gap_set_cb_func(govee_gap_evt_cb);
 
-    show_ke_malloc();
     gap_bond_manager_init(BLE_BONDING_INFO_SAVE_ADDR, BLE_REMOTE_SERVICE_SAVE_ADDR, 8, true);
     gap_bond_manager_delete_all();
 
