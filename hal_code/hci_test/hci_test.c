@@ -23,7 +23,7 @@
 #include "driver_flash.h"
 #include "driver_efuse.h"
 #include "flash_usage_config.h"
-
+#include "middle_uart.h"
 #include "hci_test.h"
 
 #define GOVEE_SW_VERSION                    "2.00.05"
