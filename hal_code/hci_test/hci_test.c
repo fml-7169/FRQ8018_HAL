@@ -66,7 +66,7 @@ struct uart_env_tag
     bool ext_wakeup;
 };
 
-struct user_uart_recv_t //串口接收数据结构体
+struct user_uart_recv_t //麓庐驴脷陆脫脢脮脢媒戮脻陆谩鹿鹿脤氓
 {
   uint8_t length;
   uint8_t indx;
@@ -141,7 +141,7 @@ struct lld_test_params
 
 
 enum EVT_STATUS evt_status = EVT_HCI;
-os_timer_t evt_at_timeout;
+//os_timer_t evt_at_timeout;
 uint16_t user_at_id;
 uint8_t tx_power_mode = 0;
 struct dev_msg_init_t dev_msg_init_p;
@@ -365,8 +365,8 @@ static int user_at_func(os_event_t *param)
             rsp_data[4] = 0x66;
             if((buff[1] < RF_TX_POWER_MAX) && (buff[2] < 0x39))
             {
-                //空载波发送
-                //example,AT#TAaa_bb_cc, aa表示channel，bb表示发送payload type，cc表示发射功率     
+                //驴脮脭脴虏篓路垄脣脥
+                //example,AT#TAaa_bb_cc, aa卤铆脢戮channel拢卢bb卤铆脢戮路垄脣脥payload type拢卢cc卤铆脢戮路垄脡盲鹿娄脗脢     
                 *(volatile uint32_t *)0x400000d0 = 0x80008000;
                 *(volatile uint8_t *)(MODEM_BASE+0x19) = 0x0c;
                 system_set_tx_power((enum rf_tx_power_t)buff[1]); // enum rf_tx_power_t tx_power
@@ -447,21 +447,21 @@ static int user_at_func(os_event_t *param)
    return EVT_CONSUMED;  
 }
 
-static void evt_at_timeout_handle(void *param)
-{
-    if(uart_recv.start_flag)
-    {
-        uart_recv.indx = 0;
-        evt_status = EVT_HCI;
-        uart_recv.start_flag = 0;
-        uart_recv.finish_flag = 0;
-        os_timer_stop(&evt_at_timeout);
-    }  
-    else
-    {
-        uart_recv.start_flag = 1;
-    }
-}
+//static void evt_at_timeout_handle(void *param)
+//{
+//    if(uart_recv.start_flag)
+//    {
+//        uart_recv.indx = 0;
+//        evt_status = EVT_HCI;
+//        uart_recv.start_flag = 0;
+//        uart_recv.finish_flag = 0;
+//        os_timer_stop(&evt_at_timeout);
+//    }  
+//    else
+//    {
+//        uart_recv.start_flag = 1;
+//    }
+//}
 
 #if 0
 void dev_at_cmd_handle(uint8_t * cmd_data,uint8_t cmd_len)
@@ -509,7 +509,6 @@ void dev_hci_test_mode(uint8_t * cmd_data,uint8_t cmd_len)
     
     if(evt_status == EVT_AT)
     {
-//             uart_putc_noint_no_wait(UART0,'0');
         dev_at_cmd_handle(cmd_data,cmd_len);
     }
     //HCI TEST
@@ -522,7 +521,6 @@ void dev_hci_test_mode(uint8_t * cmd_data,uint8_t cmd_len)
         if((uart0_env->rxsize == 0)
            &&(uart0_env->rx.callback))
         {      
-//                 uart_putc_noint_no_wait(UART0,c);
             uart_reg->u3.fcr.data = 0xf1;
             NVIC_DisableIRQ(UART0_IRQn);
             uart_reg->u3.fcr.data = 0x21;
@@ -540,8 +538,8 @@ void user_uart_at(uint8_t c)
 {
     os_event_t evt;
     
-    if(uart_recv.indx == 0)
-        os_timer_start(&evt_at_timeout,10,true);
+//    if(uart_recv.indx == 0)
+//        os_timer_start(&evt_at_timeout,10,true);
     
     uart_recv.recv_data[uart_recv.indx++] = c;
     
@@ -552,7 +550,7 @@ void user_uart_at(uint8_t c)
             uart_recv.length = uart_recv.recv_data[2];
             if(uart_recv.indx==uart_recv.length+3 )
             {
-                os_timer_stop(&evt_at_timeout);
+//                os_timer_stop(&evt_at_timeout);
                 
                 uart_recv.finish_flag = 1;
                 uart_recv.indx = 0;
@@ -563,7 +561,7 @@ void user_uart_at(uint8_t c)
             }
             else
             {
-                os_timer_stop(&evt_at_timeout);
+//                os_timer_stop(&evt_at_timeout);
                 uart_recv.indx = 0;
                 uart_recv.start_flag = 0;
                 uart_recv.finish_flag = 0;
@@ -572,7 +570,7 @@ void user_uart_at(uint8_t c)
         } 
         else
         {
-                os_timer_stop(&evt_at_timeout);
+//                os_timer_stop(&evt_at_timeout);
                 uart_recv.indx = 0;
                 uart_recv.start_flag = 0;
                 uart_recv.finish_flag = 0;
@@ -609,9 +607,11 @@ uint8_t hci_test(void)
             //HCI TEST
             else
             {
-                if(tx_power_mode)
+                if(tx_power_mode == 0x01)
+                {
                     lld_test_stop();
-                
+                    tx_power_mode = 0;
+                }
                 *uart0_env->rxbufptr++ = c;
                 uart0_env->rxsize--;
                 if((uart0_env->rxsize == 0)
@@ -718,7 +718,7 @@ uint8_t dev_check_hci_test_mode(void)
     return 0;
 }
 
-void hci_test_init(void)
+void govee_hci_test_init(void)
 {
 
     system_set_port_pull(GPIO_PA2, true);
@@ -731,7 +731,7 @@ void hci_test_init(void)
     
     uart_init(UART0, BAUD_RATE_115200);  
     NVIC_EnableIRQ(UART0_IRQn);
-    os_timer_init(&evt_at_timeout,evt_at_timeout_handle,NULL);
+//    os_timer_init(&evt_at_timeout,evt_at_timeout_handle,NULL);
     user_at_id = os_task_create(user_at_func);
     mid_uart_for_hci_test();
 }
