@@ -55,7 +55,7 @@ static void uart_data_callback(uint8 u_id,uint8* p_data, uint32 size)
 {
     if(u_id>=UART_MAX||uart_config[u_id].uart_lr==NULL){
         GOVEE_PRINT(LOG_ERROR, "Uart %d ring id error.\r\n",u_id);
-        return -1;  
+        return ;  
     }
     Lite_ring_buffer_write_data(uart_config[u_id].uart_lr, (uint8*)p_data, size);
 }

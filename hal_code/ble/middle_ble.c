@@ -330,8 +330,8 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
 
-    co_printf("ble send[%d]: ", govee_conidx);
-    govee_utils_data_print(send_data, data_len, 0);
+    //co_printf("ble send[%d]: ", govee_conidx);
+    //govee_utils_data_print(send_data, data_len, 0);
 }
 
 
@@ -628,7 +628,7 @@ int32 mid_ble_init(ble_config_t* pt_ble)
     }
     // set local device name
     gap_set_dev_name(pt_ble->local_name, pt_ble->ble_name_len);
-    GOVEE_PRINT(LOG_DEBUG,"%s\r\n",pt_ble->local_name);
+    //GOVEE_PRINT(LOG_DEBUG,"%s\r\n",pt_ble->local_name);
     memcpy(adv_data,pt_ble->p_ble_adv,pt_ble->ble_adv_len);
     adv_data_len = pt_ble->ble_adv_len;
 
@@ -652,12 +652,11 @@ int32 mid_ble_init(ble_config_t* pt_ble)
 
     gap_set_cb_func(govee_gap_evt_cb);
 
-    show_ke_malloc();
     gap_bond_manager_init(BLE_BONDING_INFO_SAVE_ADDR, BLE_REMOTE_SERVICE_SAVE_ADDR, 8, true);
     gap_bond_manager_delete_all();
 
     gap_address_get(&addr);
-    co_printf("Local BDADDR: 0x%2X%2X%2X%2X%2X%2X\r\n", addr.addr[0], addr.addr[1], addr.addr[2], addr.addr[3], addr.addr[4], addr.addr[5]);
+    //co_printf("Local BDADDR: 0x%2X%2X%2X%2X%2X%2X\r\n", addr.addr[5], addr.addr[4], addr.addr[3], addr.addr[2], addr.addr[1], addr.addr[0]);
 
     // Adding services to database
     govee_gatt_add_service();

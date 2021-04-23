@@ -10,6 +10,7 @@
 #include "driver_system.h"
 #include "driver_gpio.h"
 #include "hal_lcd.h"
+#include "sys_utils.h"
 
 #if 0
 #define DEV_ERR(format,...) do { \

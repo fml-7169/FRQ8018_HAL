@@ -68,6 +68,6 @@ uint8_t hci_test(void);
 
 uint8_t dev_check_hci_test_mode(void);
 
-void hci_test_init(void);
+void govee_hci_test_init(void);
 
 #endif

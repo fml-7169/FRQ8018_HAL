@@ -72,7 +72,6 @@ int32 mid_audio_sample_size(void)
 
 int32 mid_audio_init(void)
 {
-    pmu_set_aldo_voltage(PMU_ALDO_MODE_BYPASS, 0x00);
     pmu_codec_power_enable();
     codec_adc_init(CODEC_SAMPLE_RATE_8000);
     codec_write(0x18, 0x1C);//PGA  P/N exchange, P enable  N enable

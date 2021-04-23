@@ -48,7 +48,7 @@ INC_FOLDERS +=$(HAL_RGB_FOLDERS)
 INC_FOLDERS +=$(SDK_ROOT_DRIVER_DIRS)
 
 # Optimization flags
-OPT = -Os -g
+OPT = -Os -g -Werror
 
 # C flags common to all targets
 CFLAGS += $(OPT)
