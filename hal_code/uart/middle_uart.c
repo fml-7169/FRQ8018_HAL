@@ -187,7 +187,7 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
     }
 
     if(u_id==UART_ID_0){
-        system_set_port_pull(g_mid_uart0.RX.GPIOx, true);
+        system_set_port_pull(PIN_PORT_PIN(g_mid_uart0.RX.GPIOx,g_mid_uart0.RX.GPIO_Pin_x),1);
         system_set_port_mux(g_mid_uart0.RX.GPIOx, g_mid_uart0.RX.GPIO_Pin_x, g_mid_uart0.RX.GPIO_Func);            //RX
         system_set_port_mux(g_mid_uart0.TX.GPIOx, g_mid_uart0.TX.GPIO_Pin_x, g_mid_uart0.TX.GPIO_Func);          //TX
 
