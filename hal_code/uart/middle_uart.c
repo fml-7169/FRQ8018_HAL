@@ -205,3 +205,8 @@ void mid_uart_for_hci_test(void)
 {
     return;
 }
+
+void mid_uart_buffer_point_reset(uint8 u_id)
+{
+    Lite_ring_buffer_point_reset(uart_config[u_id].uart_lr);
+}

@@ -580,15 +580,15 @@ void user_uart_at(uint8_t c)
 }
 
 uint8_t hci_test(void)
-{
-    rwip_eif_callback callback;
-    uint8_t c;
-    void *dummy;
-    volatile struct uart_reg_t *uart_reg = (volatile struct uart_reg_t *)UART0_BASE;
-    struct uart_env_tag *uart0_env = (struct uart_env_tag *)0x20000a40;
-    
+{   
     if(__jump_table.system_option & SYSTEM_OPTION_ENABLE_HCI_MODE)
     {
+        rwip_eif_callback callback;
+        uint8_t c;
+        void *dummy;
+        volatile struct uart_reg_t *uart_reg = (volatile struct uart_reg_t *)UART0_BASE;
+        struct uart_env_tag *uart0_env = (struct uart_env_tag *)0x20000a40;
+
         while(uart_reg->lsr & 0x01)
         {
             c = uart_reg->u1.data;
