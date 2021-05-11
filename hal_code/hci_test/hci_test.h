@@ -19,8 +19,8 @@
 
 #define GOVEE_SKU_MAX_LEN 5
 #define GOVEE_VERSION_MAX_LEN   7
-#define GOVEE_FLASH_DATA_BLOCK_SIZE         512
-#define GOVEE_FLASH_DATA_BLOCK_COUNT        (0x1000/512)
+#define DEV_FLASH_DATA_BLOCK_SIZE         512
+#define DEV_FLASH_DATA_BLOCK_COUNT        (0x1000/512)
 #define HCI_TEST_MAC_ADDR 0x77000
 #define HCI_TEST_SKU_BASE 0x79000
 #define HCI_TEST_SKU_BACK 0x78000
@@ -69,5 +69,6 @@ uint8_t hci_test(void);
 uint8_t dev_check_hci_test_mode(void);
 
 void govee_hci_test_init(void);
+void govee_platform_version(void);
 
 #endif
