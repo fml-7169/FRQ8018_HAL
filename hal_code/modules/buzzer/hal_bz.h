@@ -26,7 +26,7 @@ typedef struct bz_device_t {
     int (*start)(struct bz_device_t *dev,\
                         int channel,\
                         unsigned int frequency,\
-                        unsigned char high_duty);
+                        unsigned int high_duty);
     void (*stop)(struct bz_device_t* dev,
                 int channel);
     int (*init)(struct bz_device_t *dev,\

@@ -46,7 +46,7 @@ co_printf(format,##__VA_ARGS__); \
 int buzzer_start(struct bz_device_t *dev,\
                         int channel,\
                         unsigned int frequency,\
-                        unsigned char high_duty)
+                        unsigned int high_duty)
 {
     if(dev == NULL)
         return -1;

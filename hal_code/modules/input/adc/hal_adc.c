@@ -55,7 +55,7 @@ int adc_start(struct adc_client *client)
     cfg.channels = client->channel;
     cfg.route.pad_to_sample = 1;
     cfg.clk_sel = client->nr_samples;
-    cfg.clk_div = 0x3f;
+    cfg.clk_div = 0x1f;
     adc_init(&cfg);
     adc_enable(NULL, NULL, 0);
     client->ref = adc_get_ref_voltage(ADC_REFERENCE_AVDD);
@@ -171,7 +171,7 @@ static struct hw_module_methods_t adc_module_methods = {
 
 
 const struct hw_module_t hal_module_info_adc = {
-    .tag = HARDWARE_MODULE_TAG,       // 规定的tag
+    .tag = HARDWARE_MODULE_TAG,       // 规定的taggit
     .version_major = 1,
     .version_minor = 0,
     .id = ADC_HARDWARE_MODULE_ID,  // 模块id

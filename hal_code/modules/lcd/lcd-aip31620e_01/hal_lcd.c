@@ -10,6 +10,8 @@
 #include "driver_system.h"
 #include "driver_gpio.h"
 #include "hal_lcd.h"
+#include "sys_utils.h"
+
 
 #if 0
 #define DEV_ERR(format,...) do { \
@@ -490,7 +492,7 @@ void lcd_battery_power(const unsigned char electry)
     assert_param(__lcd != NULL);
 	unsigned char electry_level=0;
 	unsigned char i = 0;
-	unsigned char electry_icon[BATT_LEVEL]={HT_T3_LCD,HT_T4_LCD,HT_T5_LCD,HT_T6_LCD,HT_T7_LCD};    
+	unsigned char electry_icon[BATT_LEVEL]={HT_T3_LCD,HT_T7_LCD,HT_T6_LCD,HT_T5_LCD,HT_T4_LCD};    
 	if(electry<=10){
 		electry_level = 0;
 	}
@@ -615,11 +617,17 @@ void lcd_put_tem(int pos,unsigned char* str,int str_len,unsigned char unit) {
     int i=0;
     assert_param(__lcd != NULL);
     assert_param(str != NULL);  
-    assert_param(str_len <= NUM_DIGITS_MAX );
+    assert_param(str_len <= NUM_DIGITS_MAX );  //TODO
 
 //    unsigned char sh_str[NUM_DIGITS_MAX]={0};  //make up string
     //memcpy(&sh_str[NUM_DIGITS_MAX-str_len],str,str_len);
     //string must  3 bytes
+    if(str_len==4){
+		lcd_set_seg(HT_S2_LCD);
+		str_len--;
+	}else{//clear 
+		lcd_clear_seg(HT_S2_LCD);
+	}
     for(i=0; i<str_len; i++) { //11.6 ,80
         lcd_putchar_cached(pos+i,str[i]);
     }
