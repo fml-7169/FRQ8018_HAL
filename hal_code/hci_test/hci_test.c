@@ -166,23 +166,23 @@ uint8_t chargovee_sku_crc_check(uint8_t * sku,uint8_t len)
 
 static int dev_flash_write_data(uint32_t addr, uint8_t* data, uint32_t size)
 {
-    uint8_t packet[GOVEE_FLASH_DATA_BLOCK_SIZE] = {0};
+    uint8_t packet[DEV_FLASH_DATA_BLOCK_SIZE] = {0};
     uint8_t buff[32] = {0};
     uint8_t i = 0;
 
-    if (size > GOVEE_FLASH_DATA_BLOCK_SIZE - 1)
+    if (size > DEV_FLASH_DATA_BLOCK_SIZE - 1)
     {
-        co_printf( "Invalid size, must less than %d.\r\n", GOVEE_FLASH_DATA_BLOCK_SIZE - 1);
+        co_printf( "Invalid size, must less than %d.\r\n", DEV_FLASH_DATA_BLOCK_SIZE - 1);
         return -1;
     }
 
-    for(i = 0; i < GOVEE_FLASH_DATA_BLOCK_COUNT; i++)
+    for(i = 0; i < DEV_FLASH_DATA_BLOCK_COUNT; i++)
     {
-        flash_read(addr + i*GOVEE_FLASH_DATA_BLOCK_SIZE, 32, buff);
+        flash_read(addr + i*DEV_FLASH_DATA_BLOCK_SIZE, 32, buff);
         if (buff[0] == 0x5a)  // this block has been used
         {
             buff[0] = 0;
-            flash_write(addr + i*GOVEE_FLASH_DATA_BLOCK_SIZE, 1, buff); // write 1st byte '0' to override this tag
+            flash_write(addr + i*DEV_FLASH_DATA_BLOCK_SIZE, 1, buff); // write 1st byte '0' to override this tag
         }
         else if (buff[0] == 0xff) // this block has been erased and not been used;
         {
@@ -190,7 +190,7 @@ static int dev_flash_write_data(uint32_t addr, uint8_t* data, uint32_t size)
         }
     }
 
-    if (i == GOVEE_FLASH_DATA_BLOCK_COUNT) /* have not searched valid space,then erase this sector and write env data to 1st block; */
+    if (i == DEV_FLASH_DATA_BLOCK_COUNT) /* have not searched valid space,then erase this sector and write env data to 1st block; */
     {
         flash_erase(addr, 0x1000);
         packet[0] = 0x5a;
@@ -201,7 +201,7 @@ static int dev_flash_write_data(uint32_t addr, uint8_t* data, uint32_t size)
     {
         packet[0] = 0x5a;
         memcpy(packet + 1, data, size);
-        flash_write(addr + i*GOVEE_FLASH_DATA_BLOCK_SIZE, size + 1, packet);
+        flash_write(addr + i*DEV_FLASH_DATA_BLOCK_SIZE, size + 1, packet);
     }
 
     return 0;
@@ -209,19 +209,19 @@ static int dev_flash_write_data(uint32_t addr, uint8_t* data, uint32_t size)
 
 static int dev_flash_read_data(uint32_t addr, uint8_t* data, uint32_t size)
 {
-    uint8_t buffer[GOVEE_FLASH_DATA_BLOCK_SIZE] = {0};
+    uint8_t buffer[DEV_FLASH_DATA_BLOCK_SIZE] = {0};
     uint8_t i = 0;
 
-    if (NULL == data || size > GOVEE_FLASH_DATA_BLOCK_SIZE - 1)
+    if (NULL == data || size > DEV_FLASH_DATA_BLOCK_SIZE - 1)
     {
         co_printf( "Invalid parameter.\r\n");
         return -1;
     }
 
-    for (i = 0; i < GOVEE_FLASH_DATA_BLOCK_COUNT; i++)
+    for (i = 0; i < DEV_FLASH_DATA_BLOCK_COUNT; i++)
     {
-        memset(buffer, 0, GOVEE_FLASH_DATA_BLOCK_SIZE);
-        flash_read(addr + i*GOVEE_FLASH_DATA_BLOCK_SIZE, size + 1, buffer);
+        memset(buffer, 0, DEV_FLASH_DATA_BLOCK_SIZE);
+        flash_read(addr + i*DEV_FLASH_DATA_BLOCK_SIZE, size + 1, buffer);
         if (buffer[0] == 0x5a || buffer[0] == 0xff)  // valid env data or have not stored evv_data
         {
             memcpy(data, buffer + 1, size);
@@ -580,15 +580,15 @@ void user_uart_at(uint8_t c)
 }
 
 uint8_t hci_test(void)
-{
-    rwip_eif_callback callback;
-    uint8_t c;
-    void *dummy;
-    volatile struct uart_reg_t *uart_reg = (volatile struct uart_reg_t *)UART0_BASE;
-    struct uart_env_tag *uart0_env = (struct uart_env_tag *)0x20000a40;
-    
+{   
     if(__jump_table.system_option & SYSTEM_OPTION_ENABLE_HCI_MODE)
     {
+        rwip_eif_callback callback;
+        uint8_t c;
+        void *dummy;
+        volatile struct uart_reg_t *uart_reg = (volatile struct uart_reg_t *)UART0_BASE;
+        struct uart_env_tag *uart0_env = (struct uart_env_tag *)0x20000a40;
+
         while(uart_reg->lsr & 0x01)
         {
             c = uart_reg->u1.data;
@@ -736,5 +736,10 @@ void govee_hci_test_init(void)
     mid_uart_for_hci_test();
 }
 
+
+void govee_platform_version(void)
+{
+    co_printf("HAL_VERSION:"PLATFORM_HAL_VERSION"\r\n");
+}
 
 

@@ -17,9 +17,9 @@
 typedef struct _LITE_RBUFFER
 {
     uint32 total;
-    uint32 size;
-    uint32 read;
-    uint32 write;
+    volatile uint32 size;
+    volatile uint32 read;
+    volatile uint32 write;
     uint8* addr;
 } LITE_RBUFFER_T;
 
@@ -77,7 +77,7 @@ void Lite_ring_buffer_deinit(LR_handler handler)
     os_free(handler);
 }
 
-int32 Lite_ring_buffer_write_data(LR_handler handler, uint8* p_data, int32 size)
+__attribute__((section("ram_code"))) int32 Lite_ring_buffer_write_data(LR_handler handler, uint8* p_data, int32 size)
 {
     int left_len = 0;
 
@@ -107,7 +107,7 @@ int32 Lite_ring_buffer_write_data(LR_handler handler, uint8* p_data, int32 size)
     return 0;
 }
 
-int32 Lite_ring_buffer_read_data(LR_handler handler, uint8* p_buffer, int32 size)
+__attribute__((section("ram_code"))) int32 Lite_ring_buffer_read_data(LR_handler handler, uint8* p_buffer, int32 size)
 {
     int left_len = 0;
 
@@ -137,12 +137,12 @@ int32 Lite_ring_buffer_read_data(LR_handler handler, uint8* p_buffer, int32 size
     return 0;
 }
 
-int32 Lite_ring_buffer_left_get(LR_handler handler)
+__attribute__((section("ram_code"))) int32 Lite_ring_buffer_left_get(LR_handler handler)
 {
     return (int32)(handler->total - handler->size);
 }
 
-int32 Lite_ring_buffer_size_get(LR_handler handler)
+__attribute__((section("ram_code"))) int32 Lite_ring_buffer_size_get(LR_handler handler)
 {
     return (int32)handler->size;
 }
@@ -161,4 +161,11 @@ void Lite_ring_buffer_print(LR_handler handler, int b_newline)
     }
 
     co_printf("\r\n");
+}
+
+void Lite_ring_buffer_point_reset(LR_handler handler)
+{
+    handler->size = 0;
+    handler->read = 0;
+    handler->write = 0;
 }
