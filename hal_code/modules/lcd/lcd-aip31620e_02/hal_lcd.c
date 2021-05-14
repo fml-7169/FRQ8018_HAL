@@ -120,7 +120,7 @@ enum
 #define TONE_OFF	0x10
 #define RC_32K 		0X30
 #endif
-#define NUM_DIGITS_MAX 3
+#define NUM_DIGITS_MAX 4
 static lcd_TypeDef* __lcd = NULL;
 /*
 *       a

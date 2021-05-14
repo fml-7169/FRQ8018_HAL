@@ -2,7 +2,7 @@ PROJECT_NAME     := fr8016h_ble_simple_peripheral
 TARGETS          := hal_lcd
 OUTPUT_DIRECTORY := build
 
-SDK_ROOT := ../../../../FR801xH-SDK
+SDK_ROOT := ../../../../platform/sdk
 PROJ_DIR := ../code
 
 LINKER_SCRIPT  := ldscript.ld
@@ -26,7 +26,8 @@ SRC_FILES += \
 			  $(SDK_ROOT)/components/driver/driver_efuse.c \
               $(SDK_ROOT)/components/modules/platform/source/exception_handlers.c \
               $(SDK_ROOT)/components/modules/platform/source/app_boot_vectors.c \
-              $(SDK_ROOT)/components/modules/patch/patch.c
+              $(SDK_ROOT)/components/modules/patch/patch.c \
+              $(SDK_ROOT)/components/ble/profiles/ble_ota/ota.c
 SRC_FILES += \
 			 $(HAL_DIR)/modules/lcd/lcd-ht1621b_4/hal_lcd.c \
 			 $(HAL_DIR)/modules/common/gpio.c \
