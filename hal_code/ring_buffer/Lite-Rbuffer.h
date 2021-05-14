@@ -19,6 +19,5 @@ int32 Lite_ring_buffer_read_data(LR_handler handler, uint8* p_buffer, int32 size
 int32 Lite_ring_buffer_left_get(LR_handler handler);
 int32 Lite_ring_buffer_size_get(LR_handler handler);
 void Lite_ring_buffer_print(LR_handler handler, int b_newline);
-void Lite_ring_buffer_point_reset(LR_handler handler);
 
 #endif /* LITE_RBUFFER_H_ */

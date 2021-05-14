@@ -17,9 +17,9 @@
 typedef struct _LITE_RBUFFER
 {
     uint32 total;
-    volatile uint32 size;
-    volatile uint32 read;
-    volatile uint32 write;
+    uint32 size;
+    uint32 read;
+    uint32 write;
     uint8* addr;
 } LITE_RBUFFER_T;
 
@@ -81,7 +81,7 @@ __attribute__((section("ram_code"))) int32 Lite_ring_buffer_write_data(LR_handle
 {
     int left_len = 0;
 
-    if (handler->total - handler->size < size)
+    if (handler->total - Lite_ring_buffer_size_get(handler) < size)
     {
 #if LITE_RBUFFER_DEBUG_ENABLE
         GOVEE_PRINT(LOG_ERROR, "No enough buffer size.\r\n");
@@ -102,7 +102,7 @@ __attribute__((section("ram_code"))) int32 Lite_ring_buffer_write_data(LR_handle
         handler->write = (handler->write + size) % handler->total;
     }
 
-    handler->size += size;
+    //handler->size += size;
 
     return 0;
 }
@@ -111,7 +111,7 @@ __attribute__((section("ram_code"))) int32 Lite_ring_buffer_read_data(LR_handler
 {
     int left_len = 0;
 
-    if (handler->size < size)
+    if (Lite_ring_buffer_size_get(handler) < size)
     {
 #if LITE_RBUFFER_DEBUG_ENABLE
         GOVEE_PRINT(LOG_ERROR, "No enough data size.\r\n");
@@ -132,18 +132,24 @@ __attribute__((section("ram_code"))) int32 Lite_ring_buffer_read_data(LR_handler
         handler->read = (handler->read + size) % handler->total;
     }
 
-    handler->size -= size;
+    //handler->size -= size;
 
     return 0;
 }
 
 __attribute__((section("ram_code"))) int32 Lite_ring_buffer_left_get(LR_handler handler)
 {
-    return (int32)(handler->total - handler->size);
+    //return (int32)(handler->total - handler->size);
+	return (int32)(handler->total - Lite_ring_buffer_size_get(handler)); 
 }
 
 __attribute__((section("ram_code"))) int32 Lite_ring_buffer_size_get(LR_handler handler)
 {
+	if( handler->write >= handler->read )
+		handler->size = handler->write - handler->read ;
+	else
+		handler->size = (handler->write + handler->total - handler->read);
+	
     return (int32)handler->size;
 }
 
@@ -161,11 +167,4 @@ void Lite_ring_buffer_print(LR_handler handler, int b_newline)
     }
 
     co_printf("\r\n");
-}
-
-void Lite_ring_buffer_point_reset(LR_handler handler)
-{
-    handler->size = 0;
-    handler->read = 0;
-    handler->write = 0;
 }
