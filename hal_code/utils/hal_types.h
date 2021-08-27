@@ -18,6 +18,6 @@ typedef struct _Pin_Map {
 
 #define PIN_PORT_PIN(GPIO,PIN)  ((uint32)1<<((GPIO*8)+PIN))
 
-#define PLATFORM_HAL_VERSION    "1.00.10"
+#define PLATFORM_HAL_VERSION    "1.00.12"
 
 #endif
