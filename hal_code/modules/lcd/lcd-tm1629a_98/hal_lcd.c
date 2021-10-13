@@ -61,6 +61,9 @@ const uint8_t char_map[] = {
   0b01011110, // D 0x5E
   0b01111001, // E 0x79
   0b01110001, // F 0x71
+  0b01111101, //G  ,16
+  0b01110110, //H  ,17
+  0b00111000, //L  ,18
   0b01000000, // '-'
   0b00000000  // ' '
 };
@@ -450,12 +453,21 @@ static void lcd_putchar_cached(int index,unsigned char c) {
               lcd_write_ram(index,14);
           case 'F':
               lcd_write_ram(index,15);
-              break;       
-          case '-':
+              break;  	  
+          case 'G':
               lcd_write_ram(index,16);
               break;
+		   case 'H':
+              lcd_write_ram(index,17);
+              break;  	  
+          case 'L':
+              lcd_write_ram(index,18);
+              break;	  
+          case '-':
+              lcd_write_ram(index,19);
+              break;
           default:{ // do nothing, blank digit!          
-			  lcd_write_ram(index,17);
+			  lcd_write_ram(index,20);
               DEV_ERR("lcd write char[%d] is  invaild\r\n",c);
           }break;
     }
