@@ -520,6 +520,16 @@ void lcd_battery_power(const unsigned char electry)
 	sendDataToLcdDriver();
 }
 
+
+void lcd_off(void){
+	i2c_start();
+	i2c_write(0x7c);				//从机地址
+	i2c_write(0xc0);				//关显示、1/3偏置
+	//i2c_write(0x00);	
+	i2c_stop();	
+    return;
+}    
+
 //clear lcd's context
 void lcd_clear(void){
     memset(__lcd_ram,0x00,sizeof(__lcd_ram));
@@ -713,6 +723,7 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
     dev->lcd_clear=lcd_clear;
     dev->lcd_full=lcd_full;
     dev->lcd_begin=lcd_begin;
+	dev->lcd_off=lcd_off;
     dev->type_def=__lcd;
     *device = (struct hw_device_t*)dev;
     return 0;

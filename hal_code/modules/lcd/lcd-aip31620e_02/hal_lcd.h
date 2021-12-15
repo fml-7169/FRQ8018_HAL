@@ -68,7 +68,9 @@ typedef struct lcd_device_t {
 
     //default context
     void (*lcd_default_context)(void);    
-    
+	
+    void (*lcd_off)(void);  
+	   
     //clear lcd's context
     void (*lcd_clear)(void);    
     
