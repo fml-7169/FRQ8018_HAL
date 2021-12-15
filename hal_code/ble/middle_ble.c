@@ -249,7 +249,7 @@ int32 mid_ble_msg_save(uint8* p_data, uint32 data_len, uint8 source, uint8 prori
         }
         ble_msg.t_header.length = BLE_PKG_DATA_LEN;
         memcpy(&ble_msg.t_message, p_data + i * BLE_PKG_DATA_LEN, BLE_PKG_DATA_LEN);
-
+		
         Lite_ring_buffer_write_data(gt_ble_lr, (uint8*)&ble_msg, sizeof(msg_packet_t));
     }
 
@@ -330,8 +330,8 @@ uint8_t protocolNotify2App(uint8_t *send_data,uint16_t data_len)
     ntf_att.p_data = send_data;
     gatt_notification(ntf_att);
 
-    //co_printf("ble send[%d]: ", govee_conidx);
-    //govee_utils_data_print(send_data, data_len, 0);
+   //co_printf("ble send[%d]: ", govee_conidx);
+   //govee_utils_data_print(send_data, data_len, 0);
 }
 
 
@@ -617,7 +617,17 @@ void mid_ble_gap_update(ble_config_t* pt_ble)
     gap_set_advertising_data(adv_data, adv_data_len);
     gap_set_advertising_rsp_data(scan_rsp_data, scan_rsp_data_len);
 }
+int32_t mid_ble_ring_buf_init(void)
+{
+    gt_ble_lr = Lite_ring_buffer_init(BLE_GATT_MSG_BUFFER_SIZE);
+    if (gt_ble_lr == NULL)
+    {
+        GOVEE_PRINT(LOG_ERROR, "BLE ring buffer init failed.\r\n");
+        return -1;
+    }
 
+    return 0;
+}
 int32 mid_ble_init(ble_config_t* pt_ble)
 {
 

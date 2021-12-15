@@ -18,6 +18,7 @@
 #include "driver_system.h"
 #include "os_mem.h"
 #include "hci_test.h"
+#include "middle_ble.h"
 
 
 static LR_handler gt_uart_lr = NULL;
@@ -128,8 +129,8 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
                 Lite_ring_buffer_write_data(uart_config[UART_ID_0].uart_lr, (uint8*)&(gvalue), 1);				
 				char str[8]={0};
 				co_sprintf(str,"0x%x ",gvalue);
-				for(int i=0;i<strlen(str);i++)
-                	uart_putc_noint_no_wait(UART1,str[i]);
+				//for(int i=0;i<strlen(str);i++)
+                //	uart_putc_noint_no_wait(UART1,str[i]);
             }  
         }
 
@@ -178,7 +179,7 @@ void mid_uart_isr_handle(uint8* p_data)
     Lite_ring_buffer_write_data(gt_uart_lr, p_data, 1);
 }
 #endif
-
+static LR_handler gt_ble_lr = NULL;
 int32 mid_uart_init(uint8 u_id,int8 baud_rate)
 {
 	static uint8 first_init_flag=0;
@@ -195,8 +196,9 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
 	        GOVEE_PRINT(LOG_ERROR, "Uart %d ring buffer init failed.\r\n",u_id);
 	        return -1;
 	    }
-	    
+		mid_ble_ring_buf_init();
 	}
+	
     if(u_id==UART_ID_0){
         system_set_port_pull(PIN_PORT_PIN(g_mid_uart0.RX.GPIOx,g_mid_uart0.RX.GPIO_Pin_x),1);
         system_set_port_mux(g_mid_uart0.RX.GPIOx, g_mid_uart0.RX.GPIO_Pin_x, g_mid_uart0.RX.GPIO_Func);            //RX

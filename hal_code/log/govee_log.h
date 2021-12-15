@@ -16,7 +16,7 @@
 #define LOG_DEBUG           3           //debug
 #define LOG_CLOSE           0x0f        //close
 
-#define LOG_LEVEL           LOG_DEBUG
+#define LOG_LEVEL           LOG_CLOSE
 
 
 #define GOVEE_PRINT(level, fmt, args...) \

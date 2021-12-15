@@ -93,5 +93,6 @@ int8 mid_ble_update_time(uint32 ble_adv_intv);
 int32 mid_ble_read_bytes(uint8* buffer, uint32 length);
 int32 mid_ble_write_bytes(uint8* buffer, uint32 length);
 uint8 govee_conn_flag_get(void);
+int32_t mid_ble_ring_buf_init(void);
 
 #endif /* MIDDLE_BLE_H_ */
