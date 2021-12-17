@@ -739,7 +739,7 @@ void govee_hci_test_init(void)
 
 void govee_platform_version(void)
 {
-    co_printf("HAL_VERSION:"PLATFORM_HAL_VERSION"\r\n");
+    co_printf("HAL_KITCHEN_VERSION:"PLATFORM_HAL_VERSION"\r\n");
 }
 
 
