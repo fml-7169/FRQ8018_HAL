@@ -105,8 +105,29 @@ enum
 
 #define NUM_DIGITS_MAX 5
 static lcd_TypeDef* __lcd = NULL;
+#define PORT_FUNC_GPIO              0x00
 
+#define CS_HIGH		pmu_set_gpio_value(__lcd->CS->GPIOx,(1<<__lcd->CS->GPIO_Pin_x), 1);
+#define CS_LOW	    pmu_set_gpio_value(__lcd->CS->GPIOx, (1<<__lcd->CS->GPIO_Pin_x), 0);
+#define CS_READ		pmu_set_gpio_value(__lcd->CS->GPIOx,__lcd->CS->GPIO_Pin_x)
 
+#define CLK_HIGH	gpio_set_pin_value(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,1);
+#define CLK_LOW		gpio_set_pin_value(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,0);
+#define CLK_READ	gpio_get_pin_value(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x)
+
+#define SDA_HIGH	gpio_set_pin_value(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,1);
+#define SDA_LOW		gpio_set_pin_value(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,0);
+#define SDA_READ	gpio_get_pin_value(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x)
+#define SDA_DIR_OUT gpio_set_dir(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
+#define SDA_DIR_IN	gpio_set_dir(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,GPIO_DIR_IN);
+
+#define RST_HIGH	gpio_set_pin_value(__lcd->RST->GPIOx,__lcd->RST->GPIO_Pin_x,1);
+#define RST_LOW		gpio_set_pin_value(__lcd->RST->GPIOx,__lcd->RST->GPIO_Pin_x,0);
+#define RST_READ	gpio_get_pin_value(__lcd->RST->GPIOx,__lcd->RST->GPIO_Pin_x)
+
+#define IO_IDLE 		pmu_get_gpio_value(__lcd->BUSY->GPIOx,__lcd->BUSY->GPIO_Pin_x)
+
+#if 0
 #define CS_HIGH		gpio_set_pin_value(__lcd->CS->GPIOx, __lcd->CS->GPIO_Pin_x, 1);
 #define CS_LOW	    gpio_set_pin_value(__lcd->CS->GPIOx, __lcd->CS->GPIO_Pin_x, 0);
 #define CS_READ		    gpio_get_pin_value(__lcd->CS->GPIOx, __lcd->CS->GPIO_Pin_x)
@@ -126,8 +147,8 @@ static lcd_TypeDef* __lcd = NULL;
 #define RST_READ		gpio_get_pin_value(__lcd->RST->GPIOx,__lcd->RST->GPIO_Pin_x)
 
 
-#define BUSY_READ 			gpio_get_pin_value(__lcd->BUSY->GPIOx,__lcd->BUSY->GPIO_Pin_x)
-
+#define IO_IDLE 			gpio_get_pin_value(__lcd->BUSY->GPIOx,__lcd->BUSY->GPIO_Pin_x)
+#endif 
 #define DISPLAY_ON     		   0xAF
 #define DISPLAY_OFF    		   0xAE
 #define SLEEP_MODE_EN     	   0xAD
@@ -247,7 +268,7 @@ void READBUSY(void)      // 检查硬件BUSY线是否忙？注意FPC接口要连
   unsigned char busy;
   while(1)
   {
-    busy =BUSY_READ;            // 读取I/O口对应硬件BUSY线的输入值
+    busy =IO_IDLE;            // 读取I/O口对应硬件BUSY线的输入值
     if (busy!=0) break;       // 硬件BUSY线高电平=不忙时跳出循环。注意高电平时不一定是1，可能是其它值，看具体I/O口的位。 
   }
 }
@@ -337,8 +358,74 @@ void ReadData(signed char *INIT_DATA)
 }
 
 
+static os_timer_t check_timer;
+ void check_busy_timer(void * arg);
+
+ void wait_start_timer(void)
+ { 
+	 os_timer_init(&check_timer,check_busy_timer,NULL);   
+	 os_timer_start(&check_timer,300,true);
+	 co_printf("---------dis update START\r\n");
+ }
+ void wait_stop_timer(void)
+ {
+	 co_printf("---------dis update STOP\r\n");
+	 os_timer_stop(&check_timer);
+ }
+ 
+
+ void lcd_checkbusy(void)
+ {
+	 system_set_port_mux(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
+	 system_set_port_mux(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO); 
+	 gpio_set_dir(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
+	 gpio_set_dir(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);  
+	 unsigned char busy;
+	 busy =IO_IDLE;  
+	// co_printf("busy %d \r\r",busy);
+	 if(busy){
+		 SendCmd(0xAe);  
+		 SendCmd(0x28);   
+		 SendCmd(0xad); 
+		 wait_stop_timer();
+		 system_sleep_enable();			
+	 }else{ 	
+
+	 }
+ }
+
+ void check_busy_timer(void * arg)
+{
+	 //co_printf("---------check_busy_timer\r\n");
+	 lcd_checkbusy();
+
+}
 
 void WriteScreen(unsigned char  *DisplayData)  // BG0=BG1=0=WHITE 背景白
+{
+	unsigned char  j;
+	SendCmd(0xac);   
+	SendCmd(0x2b);   
+	SendCmd(0x40);  
+	SendCmd(0xA9);  
+	SendCmd(0xA8);
+	for(j=0;j<(Data_Bytes);j++)
+	{
+		SendData(*DisplayData++);
+	}
+	SendData(0x00); // BG0=BG1=0=WHITE
+	SendCmd(0xAB);  
+	SendCmd(0xAA);
+	SendCmd(0xAF); 
+//	wait_start_timer();
+	/*
+	delayms(10);
+	READBUSY();
+	SendCmd(0xAe); 
+	SendCmd(0x28);  
+	SendCmd(0xad);  */
+}
+void Writeram(unsigned char  *DisplayData)  // BG0=BG1=0=WHITE 背景白
 {
 	unsigned char  j;
 	SendCmd(0xac);   
@@ -360,6 +447,7 @@ void WriteScreen(unsigned char  *DisplayData)  // BG0=BG1=0=WHITE 背景白
 	SendCmd(0x28);  
 	SendCmd(0xad);  
 }
+
 void lut_GC()  // GC 3段波形 黑剩余+白+黑置位 
 {  
   	SendCmd(0x82); //set wave form
@@ -423,11 +511,39 @@ void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，
   	lut_DU_WB();
   Temperature();        // 测量温度，修改驱动参数
 }
+enum{LCD_IDLE,LCD_DOING};
+static int lcd_state=LCD_IDLE;
 
 void lcd_update(void)
 {
-	LUT_nDU_1GC();
-	WriteScreen(__lcd_ram);
+/*
+	unsigned char busy;
+	busy =IO_IDLE;  
+	if(busy){
+		LUT_nDU_1GC();
+		WriteScreen(__lcd_ram);
+	}*/
+	system_set_port_mux(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
+	system_set_port_mux(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO); 
+	gpio_set_dir(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
+	gpio_set_dir(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
+	co_printf("lcd_update %d lcd_state %d \r\n",IO_IDLE,lcd_state);
+	if(IO_IDLE && lcd_state==LCD_IDLE){
+		LUT_nDU_1GC();
+		WriteScreen(__lcd_ram);
+		lcd_state=LCD_DOING;
+		co_printf("doing... \r\n");
+	}else if(IO_IDLE && lcd_state==LCD_DOING){
+	
+		SendCmd(0xAe); 
+		SendCmd(0x28);	
+		SendCmd(0xad); 	
+		lcd_state=LCD_IDLE;
+		co_printf("idle... \r\n");
+	}
+}
+bool lcd_is_block(){
+	return  (lcd_state==LCD_DOING?true:false);
 }
 
 void WriteScreen1(unsigned char  *DisplayData) // BG0=BG1=1=BLACK 背景黑
@@ -456,14 +572,17 @@ void WriteScreen1(unsigned char  *DisplayData) // BG0=BG1=1=BLACK 背景黑
 void lcd_clear(void){
 	memset(__lcd_ram,0,sizeof(__lcd_ram));	
 	lut_GC();
-	lcd_update();
+	LUT_nDU_1GC();
+	Writeram(__lcd_ram);
     return;
 }    
 
 //full lcd's context
 void lcd_full(void){
   memset(__lcd_ram,0xff,sizeof(__lcd_ram));
-  lcd_update();
+  
+  LUT_nDU_1GC();
+  Writeram(__lcd_ram);
   return;
 }
 
@@ -487,26 +606,32 @@ void cmd_init(void){
 	initLCDM();		
 }
 
-#define PORT_FUNC_GPIO              0x00
+
 static void lcd_begin(void) {
     assert_param(__lcd != NULL);
     lcd_TypeDef* lcd=__lcd;
-	system_set_port_mux(lcd->CS->GPIOx,lcd->CS->GPIO_Pin_x,PORT_FUNC_GPIO);
-	system_set_port_mux(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
-	system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);	
-	system_set_port_mux(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,PORT_FUNC_GPIO);	
-	system_set_port_mux(lcd->BUSY->GPIOx,lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);	
-	
-	gpio_set_dir(lcd->CS->GPIOx,lcd->CS->GPIO_Pin_x,GPIO_DIR_OUT);
-	gpio_set_dir(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
-	gpio_set_dir(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);	
-	gpio_set_dir(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);
-	gpio_set_dir(lcd->BUSY->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_IN);
-	
-	gpio_set_pin_value(lcd->CS->GPIOx,lcd->CS->GPIO_Pin_x,1);	
-	gpio_set_pin_value(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,1);
-	gpio_set_pin_value(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,1);   
-	gpio_set_pin_value(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,1);	
+	 unsigned char busy;
+	 busy =IO_IDLE;  
+	// co_printf("busy %d \r\r",busy);
+	 if(busy){
+		system_set_port_mux(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),PORT_FUNC_GPIO);	
+		system_set_port_mux(lcd->BUSY->GPIOx,lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);		
+	    pmu_set_pin_to_PMU(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x));
+	    pmu_set_pin_to_PMU(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x));
+	    pmu_set_pin_dir(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x), GPIO_DIR_OUT);	
+	    pmu_set_pin_dir(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x), GPIO_DIR_IN);
+		pmu_set_gpio_value(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),1);
+
+		system_set_port_mux(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
+		system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);	
+		system_set_port_mux(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,PORT_FUNC_GPIO);	
+		gpio_set_dir(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
+		gpio_set_dir(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);	
+		gpio_set_dir(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);	
+		gpio_set_pin_value(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,1);
+		gpio_set_pin_value(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,1);   
+		gpio_set_pin_value(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,1);	
+	 }
 //	cmd_init();
 }
 
@@ -812,6 +937,7 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
 	dev->lcd_turn_on=lcd_turn_on;
     dev->lcd_begin=lcd_begin;
 	dev->lcd_update=lcd_update;
+	dev->lcd_is_block=lcd_is_block;
     dev->type_def=__lcd;
     *device = (struct hw_device_t*)dev;
     return 0;

@@ -71,6 +71,8 @@ typedef struct lcd_device_t {
     
     /*  Show the contents of the battery that from 0~100. */
     void (*lcd_sbattery)(const unsigned char electry);
+
+	bool (*lcd_is_block)(void);
 }lcd_device_t;
 
 
