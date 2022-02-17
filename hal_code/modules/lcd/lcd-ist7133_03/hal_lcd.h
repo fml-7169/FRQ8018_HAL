@@ -48,6 +48,8 @@ typedef struct lcd_device_t {
     void (*lcd_begin)(void);
 	
 	void (*lcd_update)(void);
+	
+	void (*lcd_envconfig)(int temp);
 
     //default context
     void (*lcd_default_context)(void);    
