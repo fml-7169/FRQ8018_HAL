@@ -24,83 +24,83 @@ co_printf(format,##__VA_ARGS__); \
     co_printf(format,##__VA_ARGS__); \
 } while(0)
 #else
-    #define DEV_ERR(format,...)    
+    #define DEV_ERR(format,...)
     #define DEV_DEBUG(format,...)
 #endif
 
-enum 
+enum
 {
 	OED_SIMILE_LCD=0,
 	OED_SAD_LCD,
 	OED_BLE_LCD,
-	OED_WIFI_LCD,	
+	OED_WIFI_LCD,
 	OED_R1A_LCD,
 	OED_R1B_LCD,
-	OED_R1C_LCD,	
+	OED_R1C_LCD,
 	OED_NO0_LCD,
-	
+
 	OED_P1A_LCD,
 	OED_P1B_LCD,
-	OED_P1C_LCD,	
+	OED_P1C_LCD,
 	OED_P1D_LCD,
 	OED_P1E_LCD,
-	OED_P1F_LCD,	
+	OED_P1F_LCD,
 	OED_P1G_LCD,
 	OED_NO1_LCD,
 
 	OED_P2A_LCD,
 	OED_P2B_LCD,
-	OED_P2C_LCD,	
+	OED_P2C_LCD,
 	OED_P2D_LCD,
 	OED_P2E_LCD,
-	OED_P2F_LCD,	
+	OED_P2F_LCD,
 	OED_P2G_LCD,
 	OED_PION_LCD,
 
 
 	OED_P3A_LCD,
 	OED_P3B_LCD,
-	OED_P3C_LCD,	
+	OED_P3C_LCD,
 	OED_P3D_LCD,
 	OED_P3E_LCD,
-	OED_P3F_LCD,	
+	OED_P3F_LCD,
 	OED_P3G_LCD,
 	OED_NO2_LCD,
-	
+
 	OED_P4A_LCD,
 	OED_P4B_LCD,
-	OED_P4C_LCD,	
+	OED_P4C_LCD,
 	OED_P4D_LCD,
 	OED_P4E_LCD,
-	OED_P4F_LCD,	
+	OED_P4F_LCD,
 	OED_P4G_LCD,
 	OED_NO3_LCD,
 
-	
+
 	OED_P5A_LCD,
 	OED_P5B_LCD,
-	OED_P5C_LCD,	
+	OED_P5C_LCD,
 	OED_P5D_LCD,
 	OED_P5E_LCD,
-	OED_P5F_LCD,	
+	OED_P5F_LCD,
 	OED_P5G_LCD,
 	OED_NO4_LCD,
-	
+
 	OED_Q1A_LCD,
 	OED_Q1B_LCD,
-	OED_Q1C_LCD,	
+	OED_Q1C_LCD,
 	OED_Q1D_LCD,
 	OED_Q1E_LCD,
 	OED_NO5_LCD,
 	OED_NO6_LCD,
 	OED_NO7_LCD,
-	
+
 	OED_PERCENT_LCD,
 	OED_NO8_LCD,
-	OED_UNITC_LCD,	
+	OED_UNITC_LCD,
 	OED_UNITF_LCD,
 	OED_UNITA_LCD
-	
+
 }lcd_com;
 
 #define NUM_DIGITS_MAX 5
@@ -148,7 +148,7 @@ static lcd_TypeDef* __lcd = NULL;
 
 
 #define IO_IDLE 			gpio_get_pin_value(__lcd->BUSY->GPIOx,__lcd->BUSY->GPIO_Pin_x)
-#endif 
+#endif
 #define DISPLAY_ON     		   0xAF
 #define DISPLAY_OFF    		   0xAE
 #define SLEEP_MODE_EN     	   0xAD
@@ -157,7 +157,7 @@ static lcd_TypeDef* __lcd = NULL;
 #define SECOND_SRAM_DATA_LATCH 0xAB
 #define RAM_DATA               0xAB
 #define RAM_ADDRESS            0xAB
-#define POWER_CTRL			   0x29  
+#define POWER_CTRL			   0x29
 #define CLOCK_FREQUENCY        0xA0 //1/8  0xA1 1/4 0xA2 1/2 0xA3 1/1
 enum {
     LCD_TYPE_BLE,
@@ -193,20 +193,20 @@ const uint8_t char_map[] = {
   0b00010000, // '-'
   0b00000000  // ' '
 };
-  
+
 #define CHAR_POS_LEN   6
 #define CHAR_SEG_LEN   7
 static const unsigned char lcd_num_arr[CHAR_POS_LEN][CHAR_SEG_LEN] = {
   {OED_P1A_LCD,OED_P1B_LCD,OED_P1C_LCD,OED_P1D_LCD,OED_P1E_LCD,OED_P1F_LCD,OED_P1G_LCD},  //8-14
   {OED_P2A_LCD,OED_P2B_LCD,OED_P2C_LCD,OED_P2D_LCD,OED_P2E_LCD,OED_P2F_LCD,OED_P2G_LCD},  //16-22
   {OED_P5A_LCD,OED_P5B_LCD,OED_P5C_LCD,OED_P5D_LCD,OED_P5E_LCD,OED_P5F_LCD,OED_P5G_LCD},  //40-46
-  {OED_P3A_LCD,OED_P3B_LCD,OED_P3C_LCD,OED_P3D_LCD,OED_P3E_LCD,OED_P3F_LCD,OED_P3G_LCD},  //24-30  
+  {OED_P3A_LCD,OED_P3B_LCD,OED_P3C_LCD,OED_P3D_LCD,OED_P3E_LCD,OED_P3F_LCD,OED_P3G_LCD},  //24-30
   {OED_P4A_LCD,OED_P4B_LCD,OED_P4C_LCD,OED_P4D_LCD,OED_P4E_LCD,OED_P4F_LCD,OED_P4G_LCD},  //32-38
 };
 
 void lcd_tile(int row,int type,int enable);
 
-					
+
 void lcd_set_seg(unsigned char seg_num)
 {
 	unsigned char addr;
@@ -269,7 +269,7 @@ void READBUSY(void)      // 检查硬件BUSY线是否忙？注意FPC接口要连
   while(1)
   {
     busy =IO_IDLE;            // 读取I/O口对应硬件BUSY线的输入值
-    if (busy!=0) break;       // 硬件BUSY线高电平=不忙时跳出循环。注意高电平时不一定是1，可能是其它值，看具体I/O口的位。 
+    if (busy!=0) break;       // 硬件BUSY线高电平=不忙时跳出循环。注意高电平时不一定是1，可能是其它值，看具体I/O口的位。
   }
 }
 
@@ -346,85 +346,85 @@ void ReadData(signed char *INIT_DATA)
   SDA_DIR_IN;                   // 方向为输入
   for(scnt=0;scnt<8;scnt++)
   {
-    CLK_LOW;  
+    CLK_LOW;
     *INIT_DATA=*INIT_DATA<<1;
     tmp=SDA_READ;  // TODO SDA_IN
     if (tmp!=0)
     *INIT_DATA=*INIT_DATA+1;
     CLK_HIGH;                    // 在时钟下降沿读取输入数据才会改变。
   }
-  SDA_DIR_OUT;                  // 方向为输出  
+  SDA_DIR_OUT;                  // 方向为输出
   CS_HIGH;
 }
 
 void WriteScreen(unsigned char  *DisplayData)  // BG0=BG1=0=WHITE 背景白
 {
 	unsigned char  j;
-	SendCmd(0xac);   
-	SendCmd(0x2b);   
-	SendCmd(0x40);  
-	SendCmd(0xA9);  
+	SendCmd(0xac);
+	SendCmd(0x2b);
+	SendCmd(0x40);
+	SendCmd(0xA9);
 	SendCmd(0xA8);
 	for(j=0;j<(Data_Bytes);j++)
 	{
 		SendData(*DisplayData++);
 	}
 	SendData(0x00); // BG0=BG1=0=WHITE
-	SendCmd(0xAB);  
+	SendCmd(0xAB);
 	SendCmd(0xAA);
-	SendCmd(0xAF); 
+	SendCmd(0xAF);
 //	wait_start_timer();
 	/*
 	delayms(10);
 	READBUSY();
-	SendCmd(0xAe); 
-	SendCmd(0x28);  
+	SendCmd(0xAe);
+	SendCmd(0x28);
 	SendCmd(0xad);  */
 }
 void Writeram(unsigned char  *DisplayData)  // BG0=BG1=0=WHITE 背景白
 {
 	unsigned char  j;
-	SendCmd(0xac);   
-	SendCmd(0x2b);   
-	SendCmd(0x40);  
-	SendCmd(0xA9);  
+	SendCmd(0xac);
+	SendCmd(0x2b);
+	SendCmd(0x40);
+	SendCmd(0xA9);
 	SendCmd(0xA8);
 	for(j=0;j<(Data_Bytes);j++)
 	{
 		SendData(*DisplayData++);
 	}
 	SendData(0x00); // BG0=BG1=0=WHITE
-	SendCmd(0xAB);  
+	SendCmd(0xAB);
 	SendCmd(0xAA);
-	SendCmd(0xAF); 
+	SendCmd(0xAF);
 	delayms(10);
 	READBUSY();
-	
-	SendCmd(0xAe); 
-	SendCmd(0x28);  
-	SendCmd(0xad);  
+
+	SendCmd(0xAe);
+	SendCmd(0x28);
+	SendCmd(0xad);
 }
 
-void lut_GC()  // GC 3段波形 黑剩余+白+黑置位 
-{  
+void lut_GC()  // GC 3段波形 黑剩余+白+黑置位
+{
   	SendCmd(0x82); //set wave form
     SendCmd(0x20);
     SendCmd(0x00);
     SendCmd(0xA0);
     SendCmd(0x80);
-    SendCmd(0x40);       
+    SendCmd(0x40);
   	SendCmd(0x63);   // 设置3段波形长度
 }
 void lut_DU_WB()  // DU波形 白消图+黑出图 局刷波形
-{  
+{
   	SendCmd(0x82);
     SendCmd(0x80);
     SendCmd(0x00);
     SendCmd(0xC0);
     SendCmd(0x80);
-    SendCmd(0x80);       
+    SendCmd(0x80);
   	SendCmd(0x62);   // 设置2段波形长度
-}	
+}
  static int  VAR_Temperature=25;  // 温度值
 
 void Temperature(void)  // 建议定时测量温度，修改驱动参数
@@ -433,14 +433,14 @@ void Temperature(void)  // 建议定时测量温度，修改驱动参数
   // VAR_Temperature=外部温度传感器测量实时温度值，单位：摄氏度
     if (VAR_Temperature<10)
     {
-      SendCmd(0x7E);	  
-      SendCmd(0x81);	  
+      SendCmd(0x7E);
+      SendCmd(0x81);
         SendCmd(0xE0); // HV=18V
     }
     else
     {
-      SendCmd(0x7b);	  
-      SendCmd(0x81);	  
+      SendCmd(0x7b);
+      SendCmd(0x81);
         SendCmd(0xE4); // HV=15V
     }
     SendCmd(0xe7);     // Set default frame time
@@ -458,7 +458,7 @@ void Temperature(void)  // 建议定时测量温度，修改驱动参数
 }
 
 //const unsigned char Const_Count=61;  // 多少次DU局刷更新1次GC全刷更新，建议值：10次
-//unsigned int           VAR_Count=0; 
+//unsigned int           VAR_Count=0;
 #define REFRESH_TIMER    30*60*1000
 void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，以清除残影
 {
@@ -466,12 +466,13 @@ void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，
 	int  cur_tick=0;
 	cur_tick=system_get_curr_time();
 	if (cur_tick-pass_tick>=REFRESH_TIMER){
-		lut_GC();	
+		lut_GC();
+
 		pass_tick=cur_tick;
 	}else
 		lut_DU_WB();
 	if(cur_tick-pass_tick<=0){
-		pass_tick=cur_tick;	
+		pass_tick=cur_tick;
 		co_printf("cur_tick-pass_tick %d\r\n",cur_tick-pass_tick);
 	}
 	Temperature();        // 测量温度，修改驱动参数
@@ -483,29 +484,33 @@ void lcd_update(void)
 {
 /*
 	unsigned char busy;
-	busy =IO_IDLE;  
+	busy =IO_IDLE;
 	if(busy){
 		LUT_nDU_1GC();
 		WriteScreen(__lcd_ram);
 	}*/
 	system_set_port_mux(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
-	system_set_port_mux(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO); 
+	system_set_port_mux(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
 	gpio_set_dir(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
 	gpio_set_dir(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
 //	co_printf("lcd_update %d lcd_state %d \r\n",IO_IDLE,lcd_state);
-	if(IO_IDLE && lcd_state==LCD_IDLE){
+	if(!IO_IDLE)
+		return;
+	if(lcd_state==LCD_IDLE){
 		LUT_nDU_1GC();
 		WriteScreen(__lcd_ram);
 		lcd_state=LCD_DOING;
-		//co_printf("doing... \r\n");
-	}else if(IO_IDLE && lcd_state==LCD_DOING){
-	
-		SendCmd(0xAe); 
-		SendCmd(0x28);	
-		SendCmd(0xad); 	
+		//co_printf("doing..................... \r\n");
+		return;
+	}else if(lcd_state==LCD_DOING){
+		SendCmd(0xAe);
+		SendCmd(0x28);
+		SendCmd(0xad);
 		lcd_state=LCD_IDLE;
-	//	co_printf("idle... \r\n");
+		//co_printf("idle...................... \r\n");
+		return;
 	}
+	co_printf("lcd_state-----------------------%d \r\n",lcd_state);
 }
 bool lcd_is_block(){
 	return  (lcd_state==LCD_DOING?true:false);
@@ -514,39 +519,40 @@ bool lcd_is_block(){
 void WriteScreen1(unsigned char  *DisplayData) // BG0=BG1=1=BLACK 背景黑
 {
   unsigned char  j;
-  SendCmd(0xac);  
-  SendCmd(0x2b);    
-  SendCmd(0x40);  
-  SendCmd(0xA9);  
+  SendCmd(0xac);
+  SendCmd(0x2b);
+  SendCmd(0x40);
+  SendCmd(0xA9);
   SendCmd(0xA8);
 	for(j=0;j<(Data_Bytes);j++)
 	{
     SendData(*DisplayData++);
   }
-  SendData(0x03);  // BG0=BG1=1=BLACK 
-  SendCmd(0xAB);   
+  SendData(0x03);  // BG0=BG1=1=BLACK
+  SendCmd(0xAB);
   SendCmd(0xAA);
-  SendCmd(0xAF); 
+  SendCmd(0xAF);
   delayms(10);
   READBUSY();
-  SendCmd(0xAe);  
-  SendCmd(0x28);   
-  SendCmd(0xad);  
+  SendCmd(0xAe);
+  SendCmd(0x28);
+  SendCmd(0xad);
 }
 
 void lcd_clear(void){
-	memset(__lcd_ram,0,sizeof(__lcd_ram));	
+	memset(__lcd_ram,0,sizeof(__lcd_ram));
+	//co_printf("---------------------------------------lcd_clear \r\n");
 	lut_GC();
-	Writeram(__lcd_ram);	
+	Writeram(__lcd_ram);
     return;
-}    
+}
 void lcd_envconfig(int temp){
     VAR_Temperature=temp/100;
     return ;
-}    
+}
 //full lcd's context
 void lcd_full(void){
-  memset(__lcd_ram,0xff,sizeof(__lcd_ram));  
+  memset(__lcd_ram,0xff,sizeof(__lcd_ram));
   LUT_nDU_1GC();
   Writeram(__lcd_ram);
   return;
@@ -562,14 +568,14 @@ void lcd_turn_on(void){
 }
 void initLCDM(void)
 {
-    SendCmd(0xa7);	 
-    SendCmd(0xe0);  
+    SendCmd(0xa7);
+    SendCmd(0xe0);
 	Temperature();
 }
 
 void cmd_init(void){
 	ResetIC();
-	initLCDM();		
+	initLCDM();
 }
 
 
@@ -577,26 +583,26 @@ static void lcd_begin(void) {
     assert_param(__lcd != NULL);
     lcd_TypeDef* lcd=__lcd;
 	 unsigned char busy;
-	 busy =IO_IDLE;  
+	 busy =IO_IDLE;
 	// co_printf("busy %d \r\r",busy);
 	 if(busy){
-		system_set_port_mux(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),PORT_FUNC_GPIO);	
-		system_set_port_mux(lcd->BUSY->GPIOx,lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);		
+		system_set_port_mux(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),PORT_FUNC_GPIO);
+		system_set_port_mux(lcd->BUSY->GPIOx,lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);
 	    pmu_set_pin_to_PMU(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x));
 	    pmu_set_pin_to_PMU(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x));
-	    pmu_set_pin_dir(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x), GPIO_DIR_OUT);	
+	    pmu_set_pin_dir(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x), GPIO_DIR_OUT);
 	    pmu_set_pin_dir(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x), GPIO_DIR_IN);
 		pmu_set_gpio_value(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),1);
 
 		system_set_port_mux(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
-		system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);	
-		system_set_port_mux(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,PORT_FUNC_GPIO);	
+		system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
+		system_set_port_mux(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,PORT_FUNC_GPIO);
 		gpio_set_dir(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
-		gpio_set_dir(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);	
-		gpio_set_dir(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);	
+		gpio_set_dir(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
+		gpio_set_dir(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);
 		gpio_set_pin_value(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,1);
-		gpio_set_pin_value(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,1);   
-		gpio_set_pin_value(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,1);	
+		gpio_set_pin_value(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,1);
+		gpio_set_pin_value(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,1);
 	 }
 //	cmd_init();
 }
@@ -604,7 +610,7 @@ static void lcd_begin(void) {
 lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *CL, PortPin_Map *DA,PortPin_Map *RST,PortPin_Map *BUSY)
 {
   lcd_TypeDef *ret=NULL;
-  
+
   assert_param(CS != NULL);
   assert_param(CL != NULL);
   assert_param(DA != NULL);
@@ -616,11 +622,11 @@ lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *CL, PortPin_Map *DA,PortPin_
     return NULL;
   ret->CS = CS;
   ret->CL = CL;
-  ret->DA = DA;    
-  ret->RST = RST;  
-  ret->BUSY = BUSY; 
+  ret->DA = DA;
+  ret->RST = RST;
+  ret->BUSY = BUSY;
   __lcd = ret; // NOTE: This line must exist for all user APIs.
-  
+
   lcd_begin();
   cmd_init();
   lcd_clear();
@@ -628,30 +634,30 @@ lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *CL, PortPin_Map *DA,PortPin_
 }
 void lcd_test(){
 	static int i=0;
-	lcd_show_num(0,i);	
-	lcd_show_num(1,i);	
-	lcd_show_num(2,i);		
-	lcd_show_num(3,i);		
-	lcd_show_num(4,i);	
+	lcd_show_num(0,i);
+	lcd_show_num(1,i);
+	lcd_show_num(2,i);
+	lcd_show_num(3,i);
+	lcd_show_num(4,i);
 	i++;
 	if(i==9)
 		i=0;
 	co_printf("i=%d\r\n",i);
 }
 void lcd_write_ram( unsigned char position, unsigned char digital)
-{	
+{
 	DEV_DEBUG("pos %d data %d\r\n",position,digital);
 	//lcd_test();
-	lcd_show_num(position,digital);	
+	lcd_show_num(position,digital);
 }
 
-void lcd_battery_power(const unsigned char electry)  
-{    
+void lcd_battery_power(const unsigned char electry)
+{
 
 	 assert_param(__lcd != NULL);
 	unsigned char electry_level=0;
 	unsigned char i = 0;
-	unsigned char electry_icon[5]={OED_Q1A_LCD,OED_Q1E_LCD,OED_Q1D_LCD,OED_Q1C_LCD,OED_Q1B_LCD};	  
+	unsigned char electry_icon[5]={OED_Q1A_LCD,OED_Q1E_LCD,OED_Q1D_LCD,OED_Q1C_LCD,OED_Q1B_LCD};
 	if(electry<=10){
 		electry_level = 0;
 	}
@@ -666,7 +672,7 @@ void lcd_battery_power(const unsigned char electry)
 	}
 	else {
 		electry_level = 4;
-	}	 
+	}
 	//co_printf("electr  y_level is %d\r\n",electry_level);
 	for(i=0;i<sizeof(electry_icon);i++)//clear electry icon
 	{
@@ -675,29 +681,29 @@ void lcd_battery_power(const unsigned char electry)
 	for(i=0;i<electry_level+1;i++)//set electry icon
 	{
 		lcd_set_seg(electry_icon[i]);
-	}	 
-	//lcd_update();	    
+	}
+	//lcd_update();
 }
 void lcd_tile(int row,int type,int enable){
 	//co_printf("row %d type %d enable %d\r\n",row,type,enable);
     if(type == LCD_TYPE_BLE){
         if(enable)
-            lcd_set_seg(OED_BLE_LCD);    
+            lcd_set_seg(OED_BLE_LCD);
         else
             lcd_clear_seg(OED_BLE_LCD);
     }else if(type == LCD_TYPE_WIFI){
         if(enable)
-            lcd_set_seg(OED_WIFI_LCD);    
+            lcd_set_seg(OED_WIFI_LCD);
         else
             lcd_clear_seg(OED_WIFI_LCD);
     }else if(type == LCD_TYPE_SMILEY){
         if(enable){
 			if(row==0){
 				lcd_clear_seg(OED_SAD_LCD);
-	            lcd_set_seg(OED_SIMILE_LCD); 
+	            lcd_set_seg(OED_SIMILE_LCD);
 			}else{
 				lcd_clear_seg(OED_SIMILE_LCD);
-	            lcd_set_seg(OED_SAD_LCD); 
+	            lcd_set_seg(OED_SAD_LCD);
 			}
         }else{
             lcd_clear_seg(OED_SIMILE_LCD);
@@ -705,12 +711,12 @@ void lcd_tile(int row,int type,int enable){
         }
     }else if(type == LCD_TYPE_NEGATIVE){
 		 if(enable)
-			 lcd_set_seg(OED_R1A_LCD);	
+			 lcd_set_seg(OED_R1A_LCD);
 		 else
 			 lcd_clear_seg(OED_R1A_LCD);
 	 }else if(type == LCD_TYPE_HUNDRED){
 	  if(enable){
-		  	 lcd_set_seg(OED_R1B_LCD); 
+		  	 lcd_set_seg(OED_R1B_LCD);
 	  		 lcd_set_seg(OED_R1C_LCD);
 		 }else{
 		 	 lcd_clear_seg(OED_R1B_LCD);
@@ -725,10 +731,10 @@ void lcd_tile(int row,int type,int enable){
 		  	 lcd_set_seg(OED_UNITC_LCD);
 		 }
 	 }
-	lcd_set_seg(OED_PION_LCD);	
+	lcd_set_seg(OED_PION_LCD);
 	lcd_set_seg(OED_PERCENT_LCD);
 	lcd_set_seg(OED_UNITA_LCD);
-	//lcd_update();  
+	//lcd_update();
 }
 
 
@@ -739,7 +745,7 @@ static void lcd_putchar_cached(int index,unsigned char c) {
 
     //clear
     if(c == 0){
-        DEV_DEBUG("index[%d],clear %d\r\n",index,c);              
+        DEV_DEBUG("index[%d],clear %d\r\n",index,c);
        // lcd_write_ram(index,17);
     }
     switch(c)
@@ -791,21 +797,21 @@ static void lcd_putchar_cached(int index,unsigned char c) {
               lcd_write_ram(index,14);
           case 'F':
               lcd_write_ram(index,15);
-              break;  	  
+              break;
           case 'G':
               lcd_write_ram(index,16);
               break;
 		   case 'H':
               lcd_write_ram(index,17);
-              break;  	  
+              break;
           case 'L':
               lcd_write_ram(index,18);
-              break;	  
+              break;
           case '-':
               lcd_write_ram(index,19);
               break;
 		  #endif
-          default:{ // do nothing, blank digit!          
+          default:{ // do nothing, blank digit!
 			//  lcd_write_ram(index,20);
               DEV_ERR("lcd write char[%d] is  invaild\r\n",c);
           }break;
@@ -814,54 +820,64 @@ static void lcd_putchar_cached(int index,unsigned char c) {
 
 void IsNegnative(unsigned char* sh_str,int str_len){
 
-	if(str_len==4){		
+	if(str_len==4){
+		if(sh_str[0]=='1'){
+		  	lcd_tile(0,LCD_TYPE_HUNDRED,true);
+		}else{
+		  	lcd_tile(0,LCD_TYPE_HUNDRED,false);
+		}
 		for(int i=str_len-1; i>=1; i--) {
 			  lcd_putchar_cached(i-1,sh_str[i]);
 		}
-		 if(sh_str[0]=='1'){	  	
-			  	lcd_tile(0,LCD_TYPE_HUNDRED,true);
-		}else{		  
-			  	lcd_tile(0,LCD_TYPE_HUNDRED,false);
-		}	
+
 		lcd_tile(0,LCD_TYPE_NEGATIVE,false);
-	}else{
-		if(str_len>=5){		
-			if(sh_str[1]=='1'){		
-				lcd_tile(0,LCD_TYPE_HUNDRED,true);
-			}else{		  
-				lcd_tile(0,LCD_TYPE_HUNDRED,false);
-			}
-			if(sh_str[0]=='-'){		
-				lcd_tile(0,LCD_TYPE_NEGATIVE,true);
-			}else{		  
-				lcd_tile(0,LCD_TYPE_NEGATIVE,false);
-			}
-			for(int i=str_len-1; i>=2; i--) {		
-				lcd_putchar_cached(i-2,sh_str[i]);
-			}
-		}
+		return;
 	}
 
+
+	if(str_len>=5){
+		if(sh_str[1]=='1'){
+			lcd_tile(0,LCD_TYPE_HUNDRED,true);
+		}else{
+			lcd_tile(0,LCD_TYPE_HUNDRED,false);
+		}
+		if(sh_str[0]=='-'){
+			lcd_tile(0,LCD_TYPE_NEGATIVE,true);
+		}else{
+			lcd_tile(0,LCD_TYPE_NEGATIVE,false);
+		}
+		for(int i=str_len-1; i>=2; i--) {
+			lcd_putchar_cached(i-2,sh_str[i]);
+		}
+		return;
+	}
+	return;
 }
 
 //the pos from 0-12
+static bool isValueForTemperature(int len)
+{
+	if(len>=4)
+		return true;
+	return false;
+}
 void lcd_put_tem(int pos,unsigned char* str,int str_len,unsigned char unit) {
 	//co_printf("str_len %d\r\n",str_len);
     int i=0;
     assert_param(__lcd != NULL);
- 	assert_param(str != NULL);  
+ 	assert_param(str != NULL);
     assert_param(str_len <= NUM_DIGITS_MAX );
-	unsigned char sh_str[]={0};  //make up string
-    memcpy(&sh_str[0],str,str_len);
+	unsigned char sh_str[NUM_DIGITS_MAX+1]={0};  //make up string
+    memcpy(sh_str,str,str_len);
    //string must  3 bytes
-  // co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
+ //  co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
 //   lcd_test();
 #if 1
-   if(str_len>=4){ //temp
+   if(isValueForTemperature(str_len)){ //temp
 	   IsNegnative(sh_str,str_len);
-   }else{ //humi 
+   }else{ //humi
 	   for(i=0; i<str_len; i++) {
-		   lcd_putchar_cached(pos+i,sh_str[i]);		 	   
+		   lcd_putchar_cached(pos+i,sh_str[i]);
 	   }
    	}
    #endif
@@ -890,10 +906,10 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
     dev->common.tag = HARDWARE_DEVICE_TAG;
     dev->common.version = 0;
     dev->common.module = (struct hw_module_t*)module;
-    dev->common.close = (int (*)(struct hw_device_t*))lcd_release;    
-    
-    dev->lcd_sinit=lcd_init;    
-    dev->lcd_sbattery=lcd_battery_power;    
+    dev->common.close = (int (*)(struct hw_device_t*))lcd_release;
+
+    dev->lcd_sinit=lcd_init;
+    dev->lcd_sbattery=lcd_battery_power;
     dev->lcd_stem=lcd_put_tem;
     dev->lcd_stitle=lcd_tile;
     dev->lcd_clear=lcd_clear;
