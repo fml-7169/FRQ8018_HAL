@@ -206,6 +206,7 @@ static const unsigned char lcd_num_arr[CHAR_POS_LEN][CHAR_SEG_LEN] = {
 
 void lcd_tile(int row,int type,int enable);
 
+void cmd_init(void);
 
 void lcd_set_seg(unsigned char seg_num)
 {
@@ -466,8 +467,8 @@ void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，
 	int  cur_tick=0;
 	cur_tick=system_get_curr_time();
 	if (cur_tick-pass_tick>=REFRESH_TIMER){
+		cmd_init();
 		lut_GC();
-
 		pass_tick=cur_tick;
 	}else
 		lut_DU_WB();
@@ -478,8 +479,25 @@ void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，
 	Temperature();        // 测量温度，修改驱动参数
 }
 enum{LCD_IDLE,LCD_DOING};
-static int lcd_state=LCD_IDLE;
 
+static int lcd_state=LCD_IDLE;
+#define RESET_TIMER    5*60*1000
+static void lcd_reset(void)
+{
+	static int pass_tick=0;
+	int cur_tick=system_get_curr_time();
+
+	if (cur_tick-pass_tick>=RESET_TIMER){
+		co_printf(" RESET timer----------------------- %d\r\n",cur_tick-pass_tick);
+		cmd_init();
+		pass_tick=cur_tick;
+	}
+	if(cur_tick-pass_tick<0){
+		pass_tick=cur_tick;
+		co_printf(" RESET time cur_tick-pass_tick %d\r\n",cur_tick-pass_tick);
+	}
+
+}
 void lcd_update(void)
 {
 /*
@@ -489,13 +507,17 @@ void lcd_update(void)
 		LUT_nDU_1GC();
 		WriteScreen(__lcd_ram);
 	}*/
+
 	system_set_port_mux(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
 	system_set_port_mux(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
 	gpio_set_dir(__lcd->CL->GPIOx,__lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
 	gpio_set_dir(__lcd->DA->GPIOx,__lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
 //	co_printf("lcd_update %d lcd_state %d \r\n",IO_IDLE,lcd_state);
-	if(!IO_IDLE)
+//	ResetIC();
+	lcd_reset(); //5 minute reset once
+	if(!IO_IDLE){
 		return;
+	}
 	if(lcd_state==LCD_IDLE){
 		LUT_nDU_1GC();
 		WriteScreen(__lcd_ram);
