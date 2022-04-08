@@ -59,6 +59,22 @@ LR_handler Lite_ring_buffer_init(uint32 length)
     return lr_buffer;
 }
 
+void Lite_ring_buffer_clear(LR_handler handler)
+{
+    if (handler == NULL)
+    {
+#if LITE_RBUFFER_DEBUG_ENABLE
+        GOVEE_PRINT(LOG_ERROR, "Invalid param.\r\n");
+#endif
+        return;
+    }
+    LITE_RBUFFER_T* lr_buffer = handler;
+    memset(lr_buffer->addr, 0, lr_buffer->total);
+    lr_buffer->size = 0;
+    lr_buffer->read = 0;
+    lr_buffer->write = 0;
+    return;
+}
 void Lite_ring_buffer_deinit(LR_handler handler)
 {
     if (handler == NULL)

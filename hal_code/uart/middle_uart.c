@@ -90,6 +90,11 @@ int32 mid_uart_data_get(uint8 u_id,uint8* buffer, uint32 size)
     return 0;
 }
 
+void mid_uart_recv_data_clear(uint8 u_id)
+{
+    Lite_ring_buffer_clear(uart_config[u_id].uart_lr);
+    return ;
+}
 int32 mid_uart_data_send(uint8 u_id,uint8* p_data, uint32 size)
 {
     if(u_id>=UART_MAX||uart_config[u_id].uart_lr==NULL){

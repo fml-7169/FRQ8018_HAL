@@ -33,6 +33,7 @@ int mid_uart_data_get(uint8 u_id,uint8* buffer, uint32 size);
 int32 mid_uart_data_send(uint8 u_id,uint8* p_data, uint32 size);
 int32 mid_uart_init(uint8 u_id,int8 baud_rate);
 void mid_uart0_port_set(Pin_Map tx_pin,Pin_Map rx_pin);
+void mid_uart_recv_data_clear(uint8 u_id);
 
 
 #endif /* MIDDLE_UART_H_ */
