@@ -481,13 +481,15 @@ void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，
 enum{LCD_IDLE,LCD_DOING};
 
 static int lcd_state=LCD_IDLE;
-#define RESET_TIMER    5*60*1000
+#define RESET_TIMER  5*60*1000
 static void lcd_reset(void)
 {
 	static int pass_tick=0;
 	int cur_tick=system_get_curr_time();
 
 	if (cur_tick-pass_tick>=RESET_TIMER){
+		system_set_port_mux(__lcd->BUSY->GPIOx,__lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);
+		gpio_set_dir(__lcd->RST->GPIOx,__lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);
 		co_printf(" RESET timer----------------------- %d\r\n",cur_tick-pass_tick);
 		cmd_init();
 		pass_tick=cur_tick;
@@ -599,35 +601,28 @@ void cmd_init(void){
 	ResetIC();
 	initLCDM();
 }
-
-
 static void lcd_begin(void) {
     assert_param(__lcd != NULL);
     lcd_TypeDef* lcd=__lcd;
-	 unsigned char busy;
-	 busy =IO_IDLE;
-	// co_printf("busy %d \r\r",busy);
-	 if(busy){
-		system_set_port_mux(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),PORT_FUNC_GPIO);
-		system_set_port_mux(lcd->BUSY->GPIOx,lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);
-	    pmu_set_pin_to_PMU(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x));
-	    pmu_set_pin_to_PMU(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x));
-	    pmu_set_pin_dir(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x), GPIO_DIR_OUT);
-	    pmu_set_pin_dir(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x), GPIO_DIR_IN);
-		pmu_set_gpio_value(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),1);
 
-		system_set_port_mux(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
-		system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
-		system_set_port_mux(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,PORT_FUNC_GPIO);
-		gpio_set_dir(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
-		gpio_set_dir(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
-		gpio_set_dir(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);
-		gpio_set_pin_value(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,1);
-		gpio_set_pin_value(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,1);
-		gpio_set_pin_value(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,1);
-	 }
-//	cmd_init();
-}
+	system_set_port_mux(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),PORT_FUNC_GPIO);
+	system_set_port_mux(lcd->BUSY->GPIOx,lcd->BUSY->GPIO_Pin_x,PORT_FUNC_GPIO);
+    pmu_set_pin_to_PMU(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x));
+    pmu_set_pin_to_PMU(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x));
+    pmu_set_pin_dir(lcd->CS->GPIOx, (1<<lcd->CS->GPIO_Pin_x), GPIO_DIR_OUT);
+    pmu_set_pin_dir(lcd->BUSY->GPIOx, (1<<lcd->BUSY->GPIO_Pin_x), GPIO_DIR_IN);
+	pmu_set_gpio_value(lcd->CS->GPIOx,(1<<lcd->CS->GPIO_Pin_x),1);
+
+	system_set_port_mux(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,PORT_FUNC_GPIO);
+	system_set_port_mux(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,PORT_FUNC_GPIO);
+	system_set_port_mux(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,PORT_FUNC_GPIO);
+	gpio_set_dir(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,GPIO_DIR_OUT);
+	gpio_set_dir(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,GPIO_DIR_OUT);
+	gpio_set_dir(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,GPIO_DIR_OUT);
+	gpio_set_pin_value(lcd->CL->GPIOx,lcd->CL->GPIO_Pin_x,1);
+	gpio_set_pin_value(lcd->DA->GPIOx,lcd->DA->GPIO_Pin_x,1);
+	gpio_set_pin_value(lcd->RST->GPIOx,lcd->RST->GPIO_Pin_x,1);
+ }
 
 lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *CL, PortPin_Map *DA,PortPin_Map *RST,PortPin_Map *BUSY)
 {
