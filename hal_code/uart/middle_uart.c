@@ -24,8 +24,8 @@
 static LR_handler gt_uart_lr = NULL;
 
 typedef struct _mid_uart0_TypeDef {
-  
-  Pin_Map TX; // 
+
+  Pin_Map TX; //
   Pin_Map RX;  //
 } mid_uart0_TypeDef;
 
@@ -43,7 +43,7 @@ static mid_uart_config uart_config[2] = {
 
 mid_uart0_TypeDef g_mid_uart0={\
                             {GPIO_PORT_D,GPIO_BIT_4,PORTD4_FUNC_UART0_RXD},\
-                            {GPIO_PORT_D,GPIO_BIT_5,PORTD5_FUNC_UART0_TXD}}; //default port and 
+                            {GPIO_PORT_D,GPIO_BIT_5,PORTD5_FUNC_UART0_TXD}}; //default port and
 
 
 void mid_uart0_port_set(Pin_Map tx_pin,Pin_Map rx_pin){
@@ -56,7 +56,7 @@ static void uart_data_callback(uint8 u_id,uint8* p_data, uint32 size)
 {
     if(u_id>=UART_MAX||uart_config[u_id].uart_lr==NULL){
         GOVEE_PRINT(LOG_ERROR, "Uart %d ring id error.\r\n",u_id);
-        return ;  
+        return ;
     }
     Lite_ring_buffer_write_data(uart_config[u_id].uart_lr, (uint8*)p_data, size);
 }
@@ -66,7 +66,7 @@ int32 mid_uart_data_size(uint8 u_id)
 {
     if(u_id>=UART_MAX||uart_config[u_id].uart_lr==NULL){
         GOVEE_PRINT(LOG_ERROR, "Uart %d ring id error.\r\n",u_id);
-        return -1;  
+        return -1;
     }
     return Lite_ring_buffer_size_get(uart_config[u_id].uart_lr);
 }
@@ -75,7 +75,7 @@ int32 mid_uart_data_get(uint8 u_id,uint8* buffer, uint32 size)
 {
     if(u_id>=UART_MAX||uart_config[u_id].uart_lr==NULL){
         GOVEE_PRINT(LOG_ERROR, "Uart %d ring id error.\r\n",u_id);
-        return -1;  
+        return -1;
     }
     int left = Lite_ring_buffer_size_get(uart_config[u_id].uart_lr);
 
@@ -94,9 +94,10 @@ int32 mid_uart_data_send(uint8 u_id,uint8* p_data, uint32 size)
 {
     if(u_id>=UART_MAX||uart_config[u_id].uart_lr==NULL){
         GOVEE_PRINT(LOG_ERROR, "Uart %d ring id error.\r\n",u_id);
-        return -1;  
+        return -1;
     }
     uart_write(uart_config[u_id].uart_port,p_data,size);
+	uart_finish_transfers(uart_config[u_id].uart_port);
     return 0;
 }
 
@@ -126,12 +127,12 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
             while(uart_reg_ram->lsr & 0x01)
             {
             	gvalue=uart_reg_ram->u1.data;
-                Lite_ring_buffer_write_data(uart_config[UART_ID_0].uart_lr, (uint8*)&(gvalue), 1);				
+                Lite_ring_buffer_write_data(uart_config[UART_ID_0].uart_lr, (uint8*)&(gvalue), 1);
 				char str[8]={0};
 				co_sprintf(str,"0x%x ",gvalue);
-				//for(int i=0;i<strlen(str);i++)
-                //	uart_putc_noint_no_wait(UART1,str[i]);
-            }  
+				for(int i=0;i<strlen(str);i++)
+                	uart_putc_noint_no_wait(UART1,str[i]);
+            }
         }
 
     }
@@ -164,8 +165,8 @@ __attribute__((section("ram_code"))) void uart1_isr_ram(void)
         {
             Lite_ring_buffer_write_data(uart_config[UART_ID_1].uart_lr, (uint8*)&(uart_reg_ram->u1.data), 1);
             //uart_putc_noint_no_wait(UART1,uart_reg_ram->u1.data);
-            
-        }  
+
+        }
     }
     else if(int_id == 0x06)
     {
@@ -185,11 +186,11 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
 	static uint8 first_init_flag=0;
 	if(u_id>=UART_MAX){
         GOVEE_PRINT(LOG_ERROR, "Uart %d ring id error.\r\n",u_id);
-        return -1;  
+        return -1;
     }
 	if(first_init_flag == 0){
 		first_init_flag=1;
-		
+
 	    uart_config[u_id].uart_lr = Lite_ring_buffer_init(UART_RX_BUFFER_SIZE);
 	    if (uart_config[u_id].uart_lr == NULL)
 	    {
@@ -198,7 +199,7 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
 	    }
 		mid_ble_ring_buf_init();
 	}
-	
+
     if(u_id==UART_ID_0){
         system_set_port_pull(PIN_PORT_PIN(g_mid_uart0.RX.GPIOx,g_mid_uart0.RX.GPIO_Pin_x),1);
         system_set_port_mux(g_mid_uart0.RX.GPIOx, g_mid_uart0.RX.GPIO_Pin_x, g_mid_uart0.RX.GPIO_Func);            //RX
@@ -207,9 +208,9 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
         uart_init(uart_config[u_id].uart_port, baud_rate);
     }
    //uart_init_x(gAT_buff_env.uart_param);
-   
-    NVIC_EnableIRQ(uart_config[u_id].uart_irqn); 
-   
+
+    NVIC_EnableIRQ(uart_config[u_id].uart_irqn);
+
    // GOVEE_PRINT(LOG_DEBUG,"mid_uart_init  %d %d\r\n",u_id ,baud_rate);
     uart_write(uart_config[u_id].uart_port,"hello,world",11);
 
