@@ -34,9 +34,10 @@ co_printf(format,##__VA_ARGS__); \
 #define COMMAND_DISPLAY_ON          0x88
 #define COMMAND_DISPLAY_OFF         0x80
 #define COMMAND_SEG_ADDRESS         0xC0 //地址从00H~0FH共16个
-#define COMMAND_BRIGHTNESS          0x07
 
-
+#define COMMAND_BRIGHTNESS_HIGH        0x07 //14/16
+#define COMMAND_BRIGHTNESS_MID         0x04 //10/16
+#define COMMAND_BRIGHTNESS_LOW         0x02 //4/16
 
 //uint8_t _curpos = 0x00;
 uint8_t __lcd_ram[16] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -65,8 +66,31 @@ const uint8_t char_map[] = {
   0b01110110, //H  ,17
   0b00111000, //L  ,18
   0b01000000, // '-'
-  0b00000000  // ' '
+  0b00000000  // ' ' CLEAR_SEG
 };
+
+
+enum {	 
+	LCD_TYPE_UNIT,
+	LCD_TYPE_BLE,
+	LCD_TYPE_WIFI,	
+	LCD_TYPE_PM25,
+	LCD_TYPE_AM,
+	LCD_TYPE_PM,
+	LCD_TYPE_TIMER,   
+	LCD_TYPE_COLOR,
+	LCD_TYPE_HUNDRED,
+	LCD_TYPE_NEGATIVE,
+	LCD_TYPE_DEFAULT,
+}lcd_type;
+
+	
+enum {	 
+	LCD_SHOW_TEMPERATURE,
+	LCD_SHOW_HUMIDITY,
+	LCD_SHOW_TIMER, 
+	LCD_SHOW_PM25,
+}show_type;
 
 #define NUM_DIGITS_MAX 5
 static lcd_TypeDef* __lcd = NULL;
@@ -87,6 +111,7 @@ static lcd_TypeDef* __lcd = NULL;
 void cmd_init(void);
 void sendDataToLcdDriver(void);
 void lcd_clear();
+void lcd_luminance(unsigned char        grade);
 
 #define PORT_FUNC_GPIO              0x00
 static void lcd_begin(void) {
@@ -124,6 +149,7 @@ lcd_TypeDef* lcd_init(PortPin_Map *CS, PortPin_Map *CL, PortPin_Map *DA)
   
   lcd_begin();
   lcd_clear();
+  lcd_luminance(COMMAND_BRIGHTNESS_HIGH);
   return ret;
 }
 
@@ -135,7 +161,7 @@ static void delay(void) 				//几us的延时
 
 void cmd_init(void){
 	sendCommand(COMMAND_ADDRESS_INCREASE);
-	sendCommand(COMMAND_DISPLAY_ON|COMMAND_BRIGHTNESS);
+	//sendCommand(COMMAND_DISPLAY_ON|COMMAND_BRIGHTNESS_HIGH);
 	STB_LOW()
 	send(COMMAND_SEG_ADDRESS);
 	//lcd_clear();
@@ -159,36 +185,7 @@ void write(unsigned char dt)
 		dt >>= 1;
     }while(--i);
 }
-#if 0
-void TM1629A_Display(unsigned char *ch, unsigned char brightness)
-{
-   unsigned char tem;
-   STB_LOW()
-   write(COMMAND_ADDRESS_INCREASE); // 写显存命令，地址自动加1
-   STB_OPEN()
-   delay();//STB选通脉冲宽度大于1us
-    STB_LOW()
-    write(COMMAND_SEG_ADDRESS); // 设置显示地址命令
-    do{
-        tem = *ch;
-        if(tem >= '0' && tem <= '9') //为数字
-        {
-            tem -= '0';
-            tem += tem; //15段码一个字符占用两个字节
-            write(char_map[tem]); //将数字转化成数组位置
-            write(char_map[tem + 1]); //这是第二个字节
-            continue;
-        }
-       
-    }while(*(++ch) != 0);
-    STB_OPEN()
-    delay();
-    STB_LOW()
-    write(COMMAND_DISPLAY_ON | brightness); 
-    STB_OPEN()
-}
-#endif
-/*********** mid level  **********/
+
 void sendData(uint8_t addr, uint8_t data) {
   sendCommand(COMMAND_ADDRESS_INCREASE);
   STB_LOW()
@@ -223,8 +220,6 @@ void sendDataToLcdDriver(void) {
  	for(int i=0; i<16; i++){
     	sendData(i, __lcd_ram[i]);
   	}
-  
-  co_printf("\r\n");
 }
 
 bool  bitRead(unsigned char n, unsigned char k)
@@ -254,24 +249,6 @@ uint16_t bitWrite(uint8_t *x, uint8_t n,bool b)
 }
 
 
-#define TM_WIFI_LCD      0x01    
-#define TM_BLE_LCD       0x03    
-#define TM_MUTE_LCD      0x05	
-#define TM_ALERT1_LCD    0x07	
-#define TM_ALERT2_LCD    0x09	
-#define TM_TEMP1_LCD     0x01	
-#define TM_TEMP2_LCD     0x03	
-#define TM_UNIT_C_LCD    0x05	
-#define TM_UNIT_F_LCD    0x07	
-#define TM_BAT_LCD       0x09	
-
-#define TM_SEQ1_LCD      0x00	
-#define TM_SEQ2_LCD      0x01	
-#define TM_SEQ3_LCD      0x02	
-#define TM_SEQ4_LCD      0x03	
-#define TM_SEQ5_LCD      0x04	
-#define TM_SEQ6_LCD      0x05	
-
 void lcd_set_seg(uint8_t addr,uint8_t pos,uint8_t enable)
 {
 //	co_printf("addr %d pos  %d  enable %d\r\n",addr,pos,enable);
@@ -295,89 +272,193 @@ void lcd_write_ram( unsigned char position, unsigned char digital)
 	DEV_DEBUG("pos %d data %d\r\n",position,digital);
 	lcd_show_num(position,digital);	
 }
-#if 0
-#ifdef  USE_FULL_ASSERT
-  /**
-    * @brief  Reports the name of the source file and the source line number
-    *         where the assert_param error has occurred.
-    * @param  file: pointer to the source file name
-    * @param  line: assert_param error line source number
-    * @retval None
-    */
-  void assert_failed(unsigned char *file, uint32_t line)
-  {
-    char str[32] = "";
-    HAL_UART_Transmit(&huart2, (unsigned char*)"File:Line = ", 12, 10);
-    HAL_UART_Transmit(&huart2, file, strlen((char*)file), 10);
-    sprintf(str, ":%d\n", line);
-    HAL_UART_Transmit(&huart2, (unsigned char*)str, strlen(str), 10);
-  }
-#endif /* USE_FULL_ASSERT */
-#endif
+
 void lcd_battery_power(const unsigned char electry)  
 {    
     
 }
 
+#define TM_WIFI_LCD      0x00    
+#define TM_AM_LCD        0x01    
+#define TM_PM_LCD        0x02    
+#define TM_PM251_LCD     0x03	
+#define TM_PM252_LCD     0x04
+
+#define TM_PM253_LCD     0x08	
+#define TM_PM254_LCD     0x09
+
+#define TM_TIMER1_LCD    0x05	
+#define TM_TIMER2_LCD    0x06
+#define TM_BLE_LCD       0x07    
+		
+
+#define TM_DEFAULH11_LCD    0x00	
+#define TM_DEFAULH12_LCD    0x06	
+
+#define TM_DEFAULTH15_LCD   0x01	
+#define TM_DEFAULTH16_LCD   0x03	
+
+
+#define TM_UNIT_F_LCD    0x08
+#define TM_UNIT_C_LCD    0x0A	
+
+
+#define TM_HUNDRED_B_LCD    0x02
+#define TM_HUNDRED_C_LCD    0x04
+#define TM_UNIT_NEGATIVE_LCD    0x0C	
+
 void lcd_tile(int row,int type,int enable){
 #if 1
+		//co_printf("hal_lcd icon type %d enable %d\r\n",type,enable);
+
     switch(type)
-   { 
-         case LCD_TYPE_TEMP:{
-		 		lcd_set_seg(TM_ALERT1_LCD,12,0);
-				lcd_set_seg(TM_ALERT2_LCD,12,0);
-			   	lcd_set_seg(TM_TEMP1_LCD,13,1);
-				lcd_set_seg(TM_TEMP2_LCD,13,1);				
-         }break;  
-        case LCD_TYPE_UNIT:{
-            if(enable){	
-				lcd_set_seg(TM_UNIT_C_LCD,13,0);
-				lcd_set_seg(TM_UNIT_F_LCD,13,1);		
-			}else{
-				lcd_set_seg(TM_UNIT_F_LCD,13,0);
-				lcd_set_seg(TM_UNIT_C_LCD,13,1);
-			}
-        }break;
-		case LCD_TYPE_BAT:{	
-			lcd_set_seg(TM_BAT_LCD,13,enable);
-        }break;
+   {   
 		case LCD_TYPE_WIFI:{
-			lcd_set_seg(TM_WIFI_LCD,12,enable);
+			lcd_set_seg(0x0e,TM_WIFI_LCD,enable);  //列地址:00    02 04 06 08 0A 0c 0e 行地址: 00 01 02 03 04 05 06 07 00...
+        }break;
+		case LCD_TYPE_AM:{
+			lcd_set_seg(0x0e,TM_AM_LCD,enable);	
+        }break;
+		case LCD_TYPE_PM:{
+			lcd_set_seg(0x0e,TM_PM_LCD,enable);	
+        }break;
+		case LCD_TYPE_PM25:{
+			lcd_set_seg(0x0e,TM_PM251_LCD,enable);	
+			lcd_set_seg(0x0e,TM_PM252_LCD,enable);
+			lcd_set_seg(0x0f,TM_PM253_LCD,enable);	
+			lcd_set_seg(0x0f,TM_PM254_LCD,enable);
+        }break;
+		case LCD_TYPE_TIMER:{
+			lcd_set_seg(0x0e,TM_TIMER1_LCD,enable);	
+			lcd_set_seg(0x0e,TM_TIMER2_LCD,enable);
         }break;
 		case LCD_TYPE_BLE:{      
-			lcd_set_seg(TM_BLE_LCD,12,enable);
+			lcd_set_seg(0x0e,TM_BLE_LCD,enable);
         }break;
-		 case LCD_TYPE_MUTE:{     
-				lcd_set_seg(TM_MUTE_LCD,12,enable);
-        }break;	
-		case LCD_TYPE_ALERT:{		
-			lcd_set_seg(TM_TEMP1_LCD,13,enable);
-			lcd_set_seg(TM_TEMP2_LCD,13,enable);
-			lcd_set_seg(TM_ALERT1_LCD,12,enable);
-			lcd_set_seg(TM_ALERT2_LCD,12,enable);			     
+		
+		case LCD_TYPE_HUNDRED:{
+			lcd_set_seg(TM_HUNDRED_B_LCD,0x04,enable);		
+			lcd_set_seg(TM_HUNDRED_C_LCD,0x04,enable);
+        }break;
+		case LCD_TYPE_NEGATIVE:{
+			lcd_set_seg(TM_UNIT_NEGATIVE_LCD,0x04,enable);
+        }break;
+		case LCD_TYPE_UNIT:{
+            if(enable){	
+				lcd_set_seg(TM_UNIT_C_LCD,0x04,0);
+				lcd_set_seg(TM_UNIT_F_LCD,0x04,1);
+						
+			}else{
+				lcd_set_seg(TM_UNIT_F_LCD,0x04,0);
+				lcd_set_seg(TM_UNIT_C_LCD,0x04,1);	
+			}
         }break;
 		case LCD_TYPE_DEFAULT:{		
-			lcd_set_seg(0x0E,TM_SEQ1_LCD,enable);	
-			lcd_set_seg(0x0E,TM_SEQ2_LCD,enable);
-			lcd_set_seg(0x0E,TM_SEQ3_LCD,enable);
-			lcd_set_seg(0x00,TM_SEQ4_LCD,enable);	
-			lcd_set_seg(0x0E,TM_SEQ5_LCD,enable);
-			lcd_set_seg(0x0E,TM_SEQ6_LCD,enable);
-			lcd_set_seg(0x0E,TM_SEQ5_LCD,enable);
-			lcd_set_seg(0x0E,TM_SEQ6_LCD,enable);
-			 
-			lcd_set_seg(0x0E,TM_SEQ4_LCD,enable);
-			//lcd_set_seg(0x0E,TM_SEQ4_LCD,enable);
-			//lcd_set_seg(TM_BAT_LCD,13,enable);
+			lcd_set_seg(TM_DEFAULH11_LCD,0x04,enable);	
+			lcd_set_seg(TM_DEFAULH12_LCD,0x04,enable);	
+			lcd_set_seg(TM_DEFAULTH15_LCD,0x0A,enable);	
+			lcd_set_seg(TM_DEFAULTH16_LCD,0x0A,enable);
         }break;
 		default:{
 			DEV_ERR("lcd_tile_tem row is invaild\r\n");
 		}break;
     }
 #endif
-    sendDataToLcdDriver();
+ //   sendDataToLcdDriver();
 }
 //electry from 0~100
+#if 0
+#define TM_WIFI_LCD      0x00    
+#define TM_BLE_LCD       0x01    
+#define TM_PM251_LCD     0x02	
+#define TM_PM252_LCD     0x03	
+		
+#define TM_DEFAULTH9_LCD    0x04	
+#define TM_DEFAULTH10_LCD   0x05	
+#define TM_DEFAULH5_LCD    0x00	
+#define TM_DEFAULH6_LCD    0x06	
+
+#define TM_UNIT_F_LCD    0x08
+#define TM_UNIT_C_LCD    0x0A	
+
+
+#define TM_HUNDRED_B_LCD    0x02
+#define TM_HUNDRED_C_LCD    0x04
+#define TM_UNIT_NEGATIVE_LCD    0x0C	
+
+
+void lcd_tile(int row,int type,int enable){
+#if 1
+    switch(type)
+   {   
+        case LCD_TYPE_UNIT:{
+            if(enable){	
+				lcd_set_seg(TM_UNIT_C_LCD,0x03,0);
+				lcd_set_seg(TM_UNIT_F_LCD,0x03,1);		
+			}else{
+				lcd_set_seg(TM_UNIT_F_LCD,0x03,0);
+				lcd_set_seg(TM_UNIT_C_LCD,0x03,1);
+			}
+        }break;
+		case LCD_TYPE_WIFI:{
+			lcd_set_seg(0x0e,TM_WIFI_LCD,enable);
+        }break;
+		case LCD_TYPE_BLE:{      
+			lcd_set_seg(0x0e,TM_BLE_LCD,enable);
+        }break;
+		case LCD_TYPE_PM25:{
+			lcd_set_seg(0x0e,TM_PM251_LCD,enable);	
+			lcd_set_seg(0x0e,TM_PM252_LCD,enable);
+        }break;
+		case LCD_TYPE_TIMER:{
+		//	lcd_set_seg(TM_WIFI_LCD,12,enable);
+        }break;
+		case LCD_TYPE_COLOR:{
+			//lcd_set_seg(0xFF,0x09,enable);
+			//lcd_show_num(11,8);
+        }break;
+		case LCD_TYPE_HUNDRED:{
+			lcd_set_seg(TM_HUNDRED_B_LCD,0x03,enable);		
+			lcd_set_seg(TM_HUNDRED_C_LCD,0x03,enable);
+        }break;
+		case LCD_TYPE_NEGATIVE:{
+			lcd_set_seg(TM_UNIT_NEGATIVE_LCD,0x03,enable);
+        }break;
+		case LCD_TYPE_DEFAULT:{		
+			lcd_set_seg(0x0e,TM_DEFAULTH9_LCD,enable);	
+			lcd_set_seg(0x0e,TM_DEFAULTH10_LCD,enable);	
+			lcd_set_seg(TM_DEFAULH5_LCD,0x03,enable);	
+			lcd_set_seg(TM_DEFAULH6_LCD,0x03,enable);	
+        }break;
+		default:{
+			DEV_ERR("lcd_tile_tem row is invaild\r\n");
+		}break;
+    }
+#endif
+ //   sendDataToLcdDriver();
+}
+//electry from 0~100
+#endif
+void test(){
+	for(int i=0;i<LCD_TYPE_DEFAULT+1;i++){
+			lcd_tile(0,i,1);
+			sendDataToLcdDriver();	
+			co_delay_100us(10*1000);
+	}
+	/*
+		lcd_tile(0,LCD_TYPE_BLE,1);
+		sendDataToLcdDriver();	
+		co_delay_100us(10*1000);
+		lcd_tile(0,LCD_TYPE_WIFI,1);
+		sendDataToLcdDriver();	
+		co_delay_100us(10*1000);
+		lcd_tile(0,LCD_TYPE_PM25,1);
+		sendDataToLcdDriver();	
+		co_delay_100us(10*1000);
+		lcd_tile(0,LCD_TYPE_DEFAULT,1);
+		sendDataToLcdDriver();	
+		co_delay_100us(10*1000);*/
+}
 
 //clear lcd's context
 void lcd_clear(void){
@@ -386,13 +467,14 @@ void lcd_clear(void){
     return;
 }    
 
+
 //full lcd's context
 void lcd_full(void){
   memset(__lcd_ram,0xff,sizeof(__lcd_ram));
   sendDataToLcdDriver();
   return;
 }
-
+ 
 void lcd_turn_off(void){
   sendCommand(COMMAND_DISPLAY_OFF);
   return;
@@ -402,6 +484,17 @@ void lcd_turn_on(void){
   sendCommand(COMMAND_DISPLAY_ON);
   return;
 }
+void lcd_luminance(unsigned char        grade){
+  sendCommand(COMMAND_DISPLAY_ON|grade);
+  return;
+}
+
+void lcd_update(void){
+    sendDataToLcdDriver();
+	
+	//co_printf("lcd_update \r\n");  
+    return;
+}  
 
 #if 1
 static void lcd_putchar_cached(int index,unsigned char c) {
@@ -478,37 +571,72 @@ static void lcd_putchar_cached(int index,unsigned char c) {
 			  lcd_write_ram(index,20);
               DEV_ERR("lcd write char[%d] is  invaild\r\n",c);
           }break;
-    }
+    }	
+	//sendDataToLcdDriver();
+}
+static bool isValueForTemperature(int type)
+{
+	if(type==LCD_SHOW_TEMPERATURE)
+		return true;
+	else 
+		return false;
+
+}
+
+ static void IsNegnative(unsigned char* sh_str,int str_len){
+
+	if(str_len==4){
+		if(sh_str[0]=='1'){
+		  	lcd_tile(0,LCD_TYPE_HUNDRED,true);
+		}else{
+		  	lcd_tile(0,LCD_TYPE_HUNDRED,false);
+		}
+		for(int i=str_len-1; i>=1; i--) {
+			  lcd_putchar_cached(i+4,sh_str[i]);
+		}
+		lcd_tile(0,LCD_TYPE_NEGATIVE,false);
+		return;
+	}
+
+	if(str_len>=5){
+		if(sh_str[1]=='1'){
+			lcd_tile(0,LCD_TYPE_HUNDRED,true);
+		}else{
+			lcd_tile(0,LCD_TYPE_HUNDRED,false);
+		}
+		if(sh_str[0]=='-'){
+			lcd_tile(0,LCD_TYPE_NEGATIVE,true);
+		}else{
+			lcd_tile(0,LCD_TYPE_NEGATIVE,false);
+		}
+		for(int i=str_len-1; i>=3; i--) {
+			lcd_putchar_cached(i+3,sh_str[i]);
+		}
+		return;
+	}
+	return;
 }
 
 //the pos from 0-12
-void lcd_put_tem(int pos,unsigned char* str,int str_len,unsigned char unit) {
+void lcd_put_tem( int type,int pos,unsigned char* str,int str_len,unsigned char unit) {
     int i=0;
 	
     assert_param(__lcd != NULL);
     assert_param(str != NULL);  
     assert_param(str_len <= NUM_DIGITS_MAX );
-	unsigned char sh_str[]={0};  //make up string
-    memcpy(&sh_str[0],str,str_len);
+	unsigned char sh_str[NUM_DIGITS_MAX+1]={0};  //make up string	
+    memcpy(sh_str,str,str_len);
    //string must  3 bytes
-   #if 0
-   for(i=0; i<NUM_DIGITS_MAX; i++) {
-	   lcd_putchar_cached(pos*NUM_DIGITS_MAX+i,sh_str[i]);
-   }	
-   #endif
-   
-    //co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
-   for(i=0; i<str_len; i++) {
-	   lcd_putchar_cached(pos+i,sh_str[i]);
-   }
+ //  co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
+  if(isValueForTemperature(type)){ //temp
+	   IsNegnative(sh_str,str_len);
+   }else{ //humi or pm25 or timer
+	   for(i=0; i<str_len; i++) {
+		   lcd_putchar_cached(pos+i,sh_str[i]);
+	   }
+   	} 
    lcd_tile(0,LCD_TYPE_UNIT,unit);
-   
-   lcd_tile(0,LCD_TYPE_DEFAULT,1);
-   
-   lcd_write_ram(9,8);   
-   lcd_write_ram(10,8);
-   // lcd_tem_unit(pos,unit);
-	sendDataToLcdDriver();
+
 }
 
 #endif
@@ -542,6 +670,8 @@ static int lcd_open(const struct hw_module_t* module, char const* name,
     dev->lcd_full=lcd_full;
 	dev->lcd_turn_off=lcd_turn_off;
 	dev->lcd_turn_on=lcd_turn_on;
+	dev->lcd_luminance=lcd_luminance;
+	dev->lcd_update=lcd_update;
     dev->lcd_begin=lcd_begin;
     dev->type_def=__lcd;
     *device = (struct hw_device_t*)dev;
