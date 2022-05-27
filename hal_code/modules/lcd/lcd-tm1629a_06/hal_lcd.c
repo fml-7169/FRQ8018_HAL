@@ -609,7 +609,7 @@ static bool isValueForTemperature(int type)
 		}else{
 			lcd_tile(0,LCD_TYPE_NEGATIVE,false);
 		}
-		for(int i=str_len-1; i>=3; i--) {
+		for(int i=str_len-1; i>=2; i--) {
 			lcd_putchar_cached(i+3,sh_str[i]);
 		}
 		return;
@@ -627,7 +627,7 @@ void lcd_put_tem( int type,int pos,unsigned char* str,int str_len,unsigned char 
 	unsigned char sh_str[NUM_DIGITS_MAX+1]={0};  //make up string	
     memcpy(sh_str,str,str_len);
    //string must  3 bytes
- //  co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
+  // co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
   if(isValueForTemperature(type)){ //temp
 	   IsNegnative(sh_str,str_len);
    }else{ //humi or pm25 or timer
