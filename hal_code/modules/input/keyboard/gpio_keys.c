@@ -237,13 +237,22 @@ void button_toggle_detected(uint32_t curr_button)
 //    DEV_DEBUG("curr_button is 0x%x\r\n",curr_button);
     struct key_device_t *dev =(struct key_device_t *)keys_get_drvdata();
     unsigned int key_dev_mask=0;
+	static bool press_flag=false; 
     int i=0;
     if(dev) {
         for(i=0;i<dev->n_buttons;i++){
             key_dev_mask|=dev->button[i].gpio;
-        }        
+        } 
         dev->anti_shake_mask = key_dev_mask & curr_button;
-        os_timer_start(&anti_shake_timer, dev->button[0].debounce_interval, false);
+  	   // co_printf("dev->anti_shake_mask is 0x%x curr_button 0x%x key_dev_mask 0x%x\r\n",dev->anti_shake_mask,curr_button,key_dev_mask);
+		if(dev->anti_shake_mask==0){
+			press_flag=true;
+			os_timer_start(&anti_shake_timer, dev->button[0].debounce_interval, false);
+		}
+		if(dev->anti_shake_mask&&press_flag){
+			press_flag=false;
+			os_timer_start(&anti_shake_timer, dev->button[0].debounce_interval, false);
+		}
     }
 }
 
