@@ -121,6 +121,7 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
 {
     uint8_t int_id;
 	uint8 gvalue;
+//	uart_putc_noint_no_wait(UART1,'R');
     volatile struct uart_reg_t * const uart_reg_ram = (volatile struct uart_reg_t *)UART0_BASE;
     int_id = uart_reg_ram->u3.iir.int_id;
 
@@ -133,10 +134,10 @@ __attribute__((section("ram_code"))) void uart0_isr_ram(void)
             {
             	gvalue=uart_reg_ram->u1.data;
                 Lite_ring_buffer_write_data(uart_config[UART_ID_0].uart_lr, (uint8*)&(gvalue), 1);
-				char str[8]={0};
+				/*char str[8]={0};
 				co_sprintf(str,"0x%x ",gvalue);
 				for(int i=0;i<strlen(str);i++)
-                	uart_putc_noint_no_wait(UART1,str[i]);
+               	uart_putc_noint_no_wait(UART1,str[i]);*/
             }
         }
 
@@ -217,7 +218,7 @@ int32 mid_uart_init(uint8 u_id,int8 baud_rate)
     NVIC_EnableIRQ(uart_config[u_id].uart_irqn);
 
    // GOVEE_PRINT(LOG_DEBUG,"mid_uart_init  %d %d\r\n",u_id ,baud_rate);
-    uart_write(uart_config[u_id].uart_port,"hello,world",11);
+   // uart_write(uart_config[u_id].uart_port,"hello,world",11);
 
     return 0;
 }

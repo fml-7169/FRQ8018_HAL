@@ -190,7 +190,7 @@ const uint8_t char_map[] = {
   0b01100100, // 7 0x64
   0b01111111, // 8 0x7f
   0b01111101, // 9 0x7d
-  0b00010000, // '-'
+  0b00001000, // '-'
   0b00000000  // ' '
 };
 
@@ -460,14 +460,23 @@ void Temperature(void)  // 建议定时测量温度，修改驱动参数
 
 //const unsigned char Const_Count=61;  // 多少次DU局刷更新1次GC全刷更新，建议值：10次
 //unsigned int           VAR_Count=0;
+static bool lcd_envTempCompare(int temp_change,int real_temp){
+	//co_printf("temp_change %d real_temp %d\r\n",temp_change,real_temp);
+	if((real_temp-temp_change)>=5||(real_temp-temp_change) <=-5)
+		return true;
+	return false;
+}
 #define REFRESH_TIMER    30*60*1000
 void LUT_nDU_1GC(void)  // 每局刷更新Const_Count次，GC全刷更新1次，以清除残影
 {
 	static int pass_tick=0;
+	static int temp_change=25;
 	int  cur_tick=0;
 	cur_tick=system_get_curr_time();
-	if (cur_tick-pass_tick>=REFRESH_TIMER){
+	if (cur_tick-pass_tick>=REFRESH_TIMER||\
+		lcd_envTempCompare(temp_change,VAR_Temperature)){
 		cmd_init();
+		temp_change=VAR_Temperature;
 		lut_GC();
 		pass_tick=cur_tick;
 	}else
@@ -797,6 +806,8 @@ static void lcd_putchar_cached(int index,unsigned char c) {
           case '9':
               lcd_write_ram(index,9);
               break;
+		   case '-':
+              lcd_write_ram(index,10);
 		  #if 0
           case 'A':
               lcd_write_ram(index,10);
@@ -887,7 +898,7 @@ void lcd_put_tem(int pos,unsigned char* str,int str_len,unsigned char unit) {
 	unsigned char sh_str[NUM_DIGITS_MAX+1]={0};  //make up string
     memcpy(sh_str,str,str_len);
    //string must  3 bytes
- //  co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
+  // co_printf("str_len %d unit %d str %s\r\n",str_len,unit,sh_str);
 //   lcd_test();
 #if 1
    if(isValueForTemperature(str_len)){ //temp

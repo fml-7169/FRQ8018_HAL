@@ -18,19 +18,6 @@ typedef struct _lcd_TypeDef {
   PortPin_Map *BUSY;
 } lcd_TypeDef;
 
-
-enum {
-    LCD_TYPE_NUM,
-    LCD_TYPE_TEMP,
-    LCD_TYPE_ALERT,  
-    LCD_TYPE_UNIT,
-    LCD_TYPE_MUTE,
-    LCD_TYPE_BLE,
-    LCD_TYPE_WIFI,  
-    LCD_TYPE_BAT,
-    LCD_TYPE_DEFAULT,
-}lcd_type;
-
 #ifdef  USE_FULL_ASSERT
 /**
   * @brief  The assert_param macro is used for function's parameters check.
@@ -62,21 +49,25 @@ typedef struct lcd_device_t {
     void (*lcd_default_context)(void);    
     
     //clear lcd's context
-    void (*lcd_clear)(void);    
+    void (*lcd_clear)(void);
     
     //full lcd's context
     void (*lcd_full)(void);
+	
+    void (*lcd_update)(void);
 	
     //turn off lcd's context
 	void (*lcd_turn_off)(void);
 	
 	void (*lcd_turn_on)(void);
+	
+    void (*lcd_luminance)(unsigned char grade);
 
     /*Show tile by type*/
     void (*lcd_stitle)(int row,int type,int enable);    
     
     /*Show the contents of the temperature that is xxx*/
-    void (*lcd_stem)(int pos,unsigned char* str,int str_len,unsigned char unit);    
+    void (*lcd_stem)(int type,int pos,unsigned char* str,int str_len,unsigned char unit);    
     
     /*  Show the contents of the battery that from 0~100. */
     void (*lcd_sbattery)(const unsigned char electry);
