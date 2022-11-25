@@ -485,7 +485,8 @@ void lcd_turn_on(void){
   return;
 }
 void lcd_luminance(unsigned char        grade){
-  sendCommand(COMMAND_DISPLAY_ON|grade);
+  //sendCommand(COMMAND_DISPLAY_ON|grade);
+   sendCommand(grade);
   return;
 }
 
